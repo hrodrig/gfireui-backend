@@ -36,6 +36,8 @@ func main() {
 		}
 		defer store.Close()
 		deps.Store = store
+		deps.AuditStore = store
+		deps.Audit = store
 	} else {
 		log.Printf("warning: database.dsn empty — /api/auth/* will fail until configured")
 	}

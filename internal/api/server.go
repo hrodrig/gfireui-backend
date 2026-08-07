@@ -18,6 +18,11 @@ type UserStore interface {
 	GetUserByID(ctx context.Context, id uuid.UUID) (*domain.User, error)
 }
 
+// AuditStore lists persisted audit events for read-only inspection.
+type AuditStore interface {
+	ListAudit(ctx context.Context, limit, offset int) ([]domain.AuditEvent, error)
+}
+
 // AuditWriter records auth events. It can be a no-op until a persistent audit store exists.
 type AuditWriter interface {
 	WriteAudit(ctx context.Context, event *domain.AuditEvent) error
@@ -25,10 +30,11 @@ type AuditWriter interface {
 
 // Deps are the runtime dependencies required by the HTTP server.
 type Deps struct {
-	Store     UserStore
-	JWTSecret []byte
-	TokenTTL  time.Duration
-	Audit     AuditWriter
+	Store      UserStore
+	AuditStore AuditStore
+	JWTSecret  []byte
+	TokenTTL   time.Duration
+	Audit      AuditWriter
 }
 
 type Server struct {
@@ -51,6 +57,7 @@ func NewServer(deps Deps) http.Handler {
 	s.mux.HandleFunc("GET /healthz", s.handleHealthz)
 	s.mux.HandleFunc("POST /api/auth/login", s.handleLogin)
 	s.mux.Handle("GET /api/auth/me", s.authMiddleware(http.HandlerFunc(s.handleMe)))
+	s.mux.Handle("GET /api/audit", s.authMiddleware(RequireRoles(domain.RoleAdministrator, domain.RoleAuditor)(http.HandlerFunc(s.handleAudit))))
 	return s.mux
 }
 
