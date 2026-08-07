@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"io"
 	"log"
+	"log/slog"
 	"net/http"
 	"os"
 	"os/signal"
@@ -14,6 +15,7 @@ import (
 	"time"
 
 	"github.com/hrodrig/gfireui-backend/internal/api"
+	"github.com/hrodrig/gfireui-backend/internal/app"
 	"github.com/hrodrig/gfireui-backend/internal/bootstrap"
 	"github.com/hrodrig/gfireui-backend/internal/config"
 	"github.com/hrodrig/gfireui-backend/internal/gfire"
@@ -52,6 +54,8 @@ func run(ctx context.Context, cfgPath string, args []string) error {
 }
 
 func runServe(ctx context.Context, cfg *config.Config) error {
+	app.LogStartup(cfg)
+
 	deps := api.Deps{
 		JWTSecret: []byte(cfg.Auth.JWTSecret),
 		TokenTTL:  cfg.Auth.TokenTTL,
@@ -74,20 +78,23 @@ func runServe(ctx context.Context, cfg *config.Config) error {
 			return err
 		}
 		if bootstrapped {
-			log.Printf("bootstrapped administrator account %s", cfg.Bootstrap.AdminEmail)
+			slog.Info("bootstrapped administrator", "email", cfg.Bootstrap.AdminEmail)
 		}
 	} else {
-		log.Printf("warning: database.dsn empty — /api/auth/* will fail until configured")
+		slog.Warn("database.dsn empty — /api/auth/* will fail until configured")
 	}
 
-	if cfg.GFire.BaseURL == "" && cfg.GFire.Token == "" {
-		log.Printf("warning: gfire.base_url and gfire.token empty — /api/gfire/* will fail until configured")
+	if strings.TrimSpace(cfg.GFire.BaseURL) == "" {
+		slog.Warn("gfire.base_url empty — /api/gfire/* and /api/ops/summary will fail until configured")
 	} else {
 		client, err := gfire.NewClient(cfg.GFire.BaseURL, cfg.GFire.Token, nil)
 		if err != nil {
 			return fmt.Errorf("configure gfire client: %w", err)
 		}
 		deps.GFire = client
+		if strings.TrimSpace(cfg.GFire.Token) == "" {
+			slog.Warn("gfire.token empty — proxying to GFire without Authorization (auth disabled upstream)")
+		}
 	}
 
 	srv := &http.Server{
@@ -96,18 +103,23 @@ func runServe(ctx context.Context, cfg *config.Config) error {
 		ReadHeaderTimeout: 5 * time.Second,
 	}
 
+	errCh := make(chan error, 1)
 	go func() {
-		<-ctx.Done()
+		app.LogListening(cfg)
+		if err := srv.ListenAndServe(); err != nil && err != http.ErrServerClosed {
+			errCh <- err
+		}
+	}()
+
+	select {
+	case <-ctx.Done():
 		shutdownCtx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 		defer cancel()
 		_ = srv.Shutdown(shutdownCtx)
-	}()
-
-	log.Printf("gfireui-backend listening on %s", cfg.Server.Addr)
-	if err := srv.ListenAndServe(); err != nil && err != http.ErrServerClosed {
+		return nil
+	case err := <-errCh:
 		return err
 	}
-	return nil
 }
 
 func runUser(ctx context.Context, cfg *config.Config, args []string) error {

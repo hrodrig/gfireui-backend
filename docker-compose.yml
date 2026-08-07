@@ -45,8 +45,9 @@ services:
       GFIREUI_DATABASE_DSN: "postgres://gfireui:gfireui@postgres:5432/gfireui?sslmode=disable"
       GFIREUI_AUTH_JWT_SECRET: "dev-only-change-me"
       GFIREUI_AUTH_TOKEN_TTL: "24h"
-      # Point at a reachable GFire instance (host network / another compose stack).
-      GFIREUI_GFIRE_BASE_URL: "${GFIREUI_GFIRE_BASE_URL:-http://host.docker.internal:8080}"
+      # Optional: point at a reachable GFire (host network / another compose stack).
+      # Leave empty for auth-only smoke; set both when testing proxy/ops.
+      GFIREUI_GFIRE_BASE_URL: "${GFIREUI_GFIRE_BASE_URL:-}"
       GFIREUI_GFIRE_TOKEN: "${GFIREUI_GFIRE_TOKEN:-}"
       GFIREUI_BOOTSTRAP_ADMIN_EMAIL: "${GFIREUI_BOOTSTRAP_ADMIN_EMAIL:-admin@example.com}"
       GFIREUI_BOOTSTRAP_ADMIN_PASSWORD: "${GFIREUI_BOOTSTRAP_ADMIN_PASSWORD:-adminadmin}"

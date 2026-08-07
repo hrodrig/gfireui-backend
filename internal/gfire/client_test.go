@@ -137,3 +137,28 @@ func TestClientOpsHelpers(t *testing.T) {
 		t.Fatalf("processing count = %d, want 5", count)
 	}
 }
+
+func TestClientAllowsEmptyToken(t *testing.T) {
+	t.Parallel()
+
+	var gotAuthorization string
+	upstream := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		gotAuthorization = r.Header.Get("Authorization")
+		w.WriteHeader(http.StatusOK)
+		_, _ = w.Write([]byte(`[]`))
+	}))
+	defer upstream.Close()
+
+	client, err := gfire.NewClient(upstream.URL, "", upstream.Client())
+	if err != nil {
+		t.Fatalf("NewClient() with empty token error = %v", err)
+	}
+	resp, err := client.Do(context.Background(), http.MethodGet, "/v1/queues", nil)
+	if err != nil {
+		t.Fatalf("Do() error = %v", err)
+	}
+	defer resp.Body.Close()
+	if gotAuthorization != "" {
+		t.Fatalf("authorization = %q, want empty", gotAuthorization)
+	}
+}

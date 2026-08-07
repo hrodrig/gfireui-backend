@@ -33,9 +33,7 @@ func NewClient(baseURL, token string, httpClient *http.Client) (*Client, error) 
 	if baseURL == "" {
 		return nil, errors.New("gfire base URL is required")
 	}
-	if token == "" {
-		return nil, errors.New("gfire token is required")
-	}
+	// Token is optional: GFire auth may be disabled (local/dev). Empty token means no Authorization header.
 
 	parsed, err := url.Parse(baseURL)
 	if err != nil {
@@ -76,7 +74,9 @@ func (c *Client) Do(ctx context.Context, method, requestPath string, body io.Rea
 	if err != nil {
 		return nil, fmt.Errorf("build gfire request: %w", err)
 	}
-	req.Header.Set("Authorization", "Bearer "+c.token)
+	if c.token != "" {
+		req.Header.Set("Authorization", "Bearer "+c.token)
+	}
 	req.Header.Set("Accept", "application/json")
 	if body != nil {
 		req.Header.Set("Content-Type", "application/json")

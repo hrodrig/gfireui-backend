@@ -14,7 +14,7 @@ ARG GIT_COMMIT=unknown
 ARG GIT_BRANCH=unknown
 ARG BUILD_DATE=unknown
 RUN CGO_ENABLED=0 GOOS=${TARGETOS} GOARCH=${TARGETARCH} go build -trimpath \
-	-ldflags="-s -w" \
+	-ldflags="-s -w -X github.com/hrodrig/gfireui-backend/internal/version.Version=${APP_VERSION} -X github.com/hrodrig/gfireui-backend/internal/version.Commit=${GIT_COMMIT} -X github.com/hrodrig/gfireui-backend/internal/version.Branch=${GIT_BRANCH} -X github.com/hrodrig/gfireui-backend/internal/version.BuildDate=${BUILD_DATE}" \
 	-o /out/gfireui-backend ./cmd/gfireui-backend
 
 FROM gcr.io/distroless/static-debian12:nonroot
