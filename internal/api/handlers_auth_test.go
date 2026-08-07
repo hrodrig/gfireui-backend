@@ -6,6 +6,7 @@ import (
 	"encoding/json"
 	"net/http"
 	"net/http/httptest"
+	"sort"
 	"testing"
 	"time"
 
@@ -284,6 +285,57 @@ func (f *fakeUserStore) GetUserByID(_ context.Context, id uuid.UUID) (*domain.Us
 		return user, nil
 	}
 	return nil, store.ErrNotFound
+}
+
+func (f *fakeUserStore) CreateUser(_ context.Context, user *domain.User) error {
+	if user == nil {
+		return nil
+	}
+	if f.usersByEmail == nil {
+		f.usersByEmail = make(map[string]*domain.User)
+	}
+	if f.usersByID == nil {
+		f.usersByID = make(map[uuid.UUID]*domain.User)
+	}
+	if user.ID == uuid.Nil {
+		user.ID = uuid.Must(uuid.NewV7())
+	}
+	f.usersByEmail[user.Email] = user
+	f.usersByID[user.ID] = user
+	return nil
+}
+
+func (f *fakeUserStore) ListUsers(_ context.Context) ([]domain.User, error) {
+	users := make([]domain.User, 0, len(f.usersByID))
+	for _, user := range f.usersByID {
+		users = append(users, *user)
+	}
+	sort.Slice(users, func(i, j int) bool {
+		if users[i].Email == users[j].Email {
+			return users[i].ID.String() < users[j].ID.String()
+		}
+		return users[i].Email < users[j].Email
+	})
+	return users, nil
+}
+
+func (f *fakeUserStore) UpdateUser(_ context.Context, user *domain.User) error {
+	if user == nil {
+		return nil
+	}
+	if f.usersByEmail == nil {
+		f.usersByEmail = make(map[string]*domain.User)
+	}
+	if f.usersByID == nil {
+		f.usersByID = make(map[uuid.UUID]*domain.User)
+	}
+	if existing, ok := f.usersByID[user.ID]; ok {
+		delete(f.usersByEmail, existing.Email)
+	}
+	copyUser := *user
+	f.usersByID[user.ID] = &copyUser
+	f.usersByEmail[user.Email] = &copyUser
+	return nil
 }
 
 type fakeAuditWriter struct {

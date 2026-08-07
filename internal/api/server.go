@@ -16,6 +16,9 @@ const defaultTokenTTL = 24 * time.Hour
 type UserStore interface {
 	GetUserByEmail(ctx context.Context, email string) (*domain.User, error)
 	GetUserByID(ctx context.Context, id uuid.UUID) (*domain.User, error)
+	CreateUser(ctx context.Context, user *domain.User) error
+	ListUsers(ctx context.Context) ([]domain.User, error)
+	UpdateUser(ctx context.Context, user *domain.User) error
 }
 
 // AuditStore lists persisted audit events for read-only inspection.
@@ -58,6 +61,11 @@ func NewServer(deps Deps) http.Handler {
 	s.mux.HandleFunc("POST /api/auth/login", s.handleLogin)
 	s.mux.Handle("GET /api/auth/me", s.authMiddleware(http.HandlerFunc(s.handleMe)))
 	s.mux.Handle("GET /api/audit", s.authMiddleware(RequireRoles(domain.RoleAdministrator, domain.RoleAuditor)(http.HandlerFunc(s.handleAudit))))
+	s.mux.Handle("GET /api/users", s.authMiddleware(RequireRoles(domain.RoleAdministrator)(http.HandlerFunc(s.handleUsersList))))
+	s.mux.Handle("POST /api/users", s.authMiddleware(RequireRoles(domain.RoleAdministrator)(http.HandlerFunc(s.handleUsersCreate))))
+	s.mux.Handle("GET /api/users/{id}", s.authMiddleware(RequireRoles(domain.RoleAdministrator)(http.HandlerFunc(s.handleUserGet))))
+	s.mux.Handle("PATCH /api/users/{id}", s.authMiddleware(RequireRoles(domain.RoleAdministrator)(http.HandlerFunc(s.handleUserPatch))))
+	s.mux.Handle("POST /api/users/{id}/password", s.authMiddleware(RequireRoles(domain.RoleAdministrator)(http.HandlerFunc(s.handleUserPassword))))
 	return s.mux
 }
 
