@@ -1,0 +1,9 @@
+.git
+.bin
+bin
+coverage.out
+*.md
+!README.md
+.DS_Store
+.no-va-al-repo
+docs/assets

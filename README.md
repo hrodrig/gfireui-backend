@@ -127,8 +127,8 @@ Signing key + GFire Bearer: **env/config only** in v0.1.
 
 ## Bootstrap
 
-1. **First boot (env):** `GFIREUI_ADMIN_USER` / `GFIREUI_ADMIN_PASSWORD` (+ name fields as specified) creates an Administrator when the DB is empty.  
-2. **CLI:** `gfireui-backend user create --role Administrator` for ongoing ops.
+1. **First boot (env):** when `users` is empty, set `GFIREUI_BOOTSTRAP_ADMIN_EMAIL`, `GFIREUI_BOOTSTRAP_ADMIN_PASSWORD`, `GFIREUI_BOOTSTRAP_ADMIN_FIRST_NAME`, `GFIREUI_BOOTSTRAP_ADMIN_LAST_NAME`.  
+2. **CLI:** `gfireui-backend user create --email … --password … --role Administrator --first-name … --last-name …`
 
 [↑ Back to top](#readme-top)
 
@@ -138,10 +138,11 @@ Signing key + GFire Bearer: **env/config only** in v0.1.
 | ---- | ----- |
 | Platform design | ✅ Approved 2026-08-06 |
 | Go module / `cmd` | ✅ |
-| Migrations + auth | ⬜ |
-| GFire proxy + RBAC | ⬜ |
-| Docker Compose | ⬜ |
-| First runnable release | ⬜ |
+| Migrations + auth + users + audit | ✅ |
+| GFire proxy + RBAC + ops summary | ✅ |
+| Docker Compose (app stack) | ✅ |
+| Kubernetes / selfhosted sibling | ⬜ post-v0.1 (separate repo) |
+| Merge to `main` / first tag | ⬜ when E2E with GFireUI is usable |
 
 [↑ Back to top](#readme-top)
 
@@ -152,28 +153,50 @@ gfireui-backend/
 ├── README.md
 ├── VERSION
 ├── LICENSE
+├── SPECIFICATIONS.md
+├── ROADMAP.md
+├── Dockerfile              # local/CI multi-stage build
+├── Dockerfile.release      # GoReleaser runtime image (binary pre-built)
+├── docker-compose.yml
+├── cmd/gfireui-backend/
+├── internal/
+├── migrations/
 └── docs/
     ├── assets/
     │   └── gfireui-backend-hero.png
-    └── superpowers/specs/
-        └── 2026-08-06-gfireui-platform-design.md
+    └── superpowers/
 ```
-
-`cmd/`, `internal/`, migrations, and Makefile appear with scaffolding.
 
 [↑ Back to top](#readme-top)
 
 ## Development
 
-Not runnable yet. After scaffold (expected shape):
+**Compose (recommended):**
 
 ```sh
-make build
-make run            # or: go run ./cmd/gfireui-backend
-# GFIREUI_* and GFire base URL / token via config + env
+export GFIREUI_GFIRE_BASE_URL=http://host.docker.internal:8080
+export GFIREUI_GFIRE_TOKEN=your-gfire-bearer   # if GFire auth enabled
+docker compose up --build
+curl -sS http://127.0.0.1:8090/healthz
+# login with bootstrap admin (defaults in compose) via POST /api/auth/login
 ```
 
-Requires PostgreSQL (`gfireui` database) and a reachable **[gfire](https://github.com/hrodrig/gfire)** API.
+**Local binary:**
+
+```sh
+make test
+make build
+export GFIREUI_DATABASE_DSN='postgres://gfireui:gfireui@127.0.0.1:5433/gfireui?sslmode=disable'
+export GFIREUI_AUTH_JWT_SECRET=dev-only
+make migrate-up   # requires golang-migrate CLI
+./bin/gfireui-backend serve
+```
+
+Requires PostgreSQL (`gfireui` database) and a reachable **[gfire](https://github.com/hrodrig/gfire)** for proxy/ops routes.
+
+**Images:** `Dockerfile` = compile-in-Docker for local/CI. `Dockerfile.release` = distroless runtime for GoReleaser (binary already built). Same split as sibling Go repos.
+
+**Note:** Helm/k8s packaging is intentionally out of this repo — planned for a future `*-selfhosted` sibling.
 
 [↑ Back to top](#readme-top)
 

@@ -1,0 +1,18 @@
+# syntax=docker/dockerfile:1
+# Runtime image for GoReleaser dockers_v2: binaries are built by GoReleaser and laid out as
+# linux/<arch>/<binary> in the build context.
+# Local multi-stage compile: use Dockerfile (docker compose build / docker build).
+ARG TARGETPLATFORM
+FROM gcr.io/distroless/static-debian12:nonroot
+ARG TARGETPLATFORM
+WORKDIR /app
+LABEL org.opencontainers.image.title="gfireui-backend"
+LABEL org.opencontainers.image.description="BFF for GFireUI — auth, RBAC, audit, thin GFire proxy"
+LABEL org.opencontainers.image.source="https://github.com/hrodrig/gfireui-backend"
+LABEL org.opencontainers.image.authors="https://github.com/hrodrig/gfireui-backend"
+COPY ${TARGETPLATFORM}/gfireui-backend /app/gfireui-backend
+COPY migrations /app/migrations
+USER nonroot:nonroot
+EXPOSE 8090
+ENTRYPOINT ["/app/gfireui-backend"]
+CMD ["serve"]

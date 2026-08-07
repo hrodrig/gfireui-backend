@@ -1,0 +1,57 @@
+# Local / portable app stack for gfireui-backend.
+# Kubernetes manifests intentionally omitted — future *-selfhosted sibling.
+services:
+  postgres:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_USER: gfireui
+      POSTGRES_PASSWORD: gfireui
+      POSTGRES_DB: gfireui
+    ports:
+      - "5433:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U gfireui -d gfireui"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+    volumes:
+      - gfireui_pg:/var/lib/postgresql/data
+
+  migrate:
+    image: migrate/migrate:v4.18.1
+    depends_on:
+      postgres:
+        condition: service_healthy
+    volumes:
+      - ./migrations:/migrations:ro
+    command:
+      [
+        "-path=/migrations",
+        "-database=postgres://gfireui:gfireui@postgres:5432/gfireui?sslmode=disable",
+        "up",
+      ]
+
+  backend:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    depends_on:
+      migrate:
+        condition: service_completed_successfully
+    ports:
+      - "8090:8090"
+    environment:
+      GFIREUI_SERVER_ADDR: ":8090"
+      GFIREUI_DATABASE_DSN: "postgres://gfireui:gfireui@postgres:5432/gfireui?sslmode=disable"
+      GFIREUI_AUTH_JWT_SECRET: "dev-only-change-me"
+      GFIREUI_AUTH_TOKEN_TTL: "24h"
+      # Point at a reachable GFire instance (host network / another compose stack).
+      GFIREUI_GFIRE_BASE_URL: "${GFIREUI_GFIRE_BASE_URL:-http://host.docker.internal:8080}"
+      GFIREUI_GFIRE_TOKEN: "${GFIREUI_GFIRE_TOKEN:-}"
+      GFIREUI_BOOTSTRAP_ADMIN_EMAIL: "${GFIREUI_BOOTSTRAP_ADMIN_EMAIL:-admin@example.com}"
+      GFIREUI_BOOTSTRAP_ADMIN_PASSWORD: "${GFIREUI_BOOTSTRAP_ADMIN_PASSWORD:-adminadmin}"
+      GFIREUI_BOOTSTRAP_ADMIN_FIRST_NAME: "${GFIREUI_BOOTSTRAP_ADMIN_FIRST_NAME:-Admin}"
+      GFIREUI_BOOTSTRAP_ADMIN_LAST_NAME: "${GFIREUI_BOOTSTRAP_ADMIN_LAST_NAME:-User}"
+
+volumes:
+  gfireui_pg:
