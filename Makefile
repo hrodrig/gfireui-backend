@@ -33,8 +33,9 @@ endif
 .DEFAULT_GOAL := help
 
 # Project-wide statement coverage floor (make cover / release-check).
-# gghstats uses 80; raise to 80 before first tagged release (today ~54%).
-COVER_MIN_PERCENT ?= 50
+COVER_MIN_PERCENT ?= 80
+# Integration store tests need Postgres (compose service on host port 5433).
+COVER_DSN ?= postgres://gfireui:gfireui@127.0.0.1:5433/gfireui?sslmode=disable
 
 GREEN  := \033[0;32m
 YELLOW := \033[0;33m
@@ -60,7 +61,7 @@ help:
 	@echo "  $(GREEN)migrate-down$(RESET)     Roll back one migration"
 	@echo ""
 	@echo "$(YELLOW)Quality:$(RESET)"
-	@echo "  $(GREEN)cover$(RESET)            Run tests with coverage; fail if total < $(COVER_MIN_PERCENT)%"
+	@echo "  $(GREEN)cover$(RESET)            Postgres via compose + tests; fail if total < $(COVER_MIN_PERCENT)%"
 	@echo "  $(GREEN)grype$(RESET)            Grype directory scan (excludes ./dist/**, ./$(BINARY))"
 	@echo "  $(GREEN)lint$(RESET)             Check gofmt -s and go vet"
 	@echo "  $(GREEN)lint-fix$(RESET)         Apply gofmt -s -w"
@@ -112,7 +113,13 @@ test:
 	go test -race ./...
 
 cover:
-	go test ./... -coverprofile=coverage.out -covermode=atomic
+	$(check-docker)
+	@docker compose up -d postgres
+	@for i in 1 2 3 4 5 6 7 8 9 10 11 12 15 18 20; do \
+		docker compose exec -T postgres pg_isready -U gfireui -d gfireui >/dev/null 2>&1 && break; \
+		sleep 1; \
+	done
+	GFIREUI_TEST_DSN="$(COVER_DSN)" go test ./... -coverprofile=coverage.out -covermode=atomic -count=1
 	@total=$$(go tool cover -func=coverage.out | tail -1); echo "$$total"; \
 	pct=$$(echo "$$total" | awk '{print $$NF}' | tr -d '%'); \
 	awk -v p="$$pct" -v min="$(COVER_MIN_PERCENT)" 'BEGIN { if ((p+0) < (min+0)) { printf "coverage %s%% must be >= %s%%\n", p, min; exit 1 } }'

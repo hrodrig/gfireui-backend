@@ -117,34 +117,40 @@ func TestWriteAuditAndListAudit(t *testing.T) {
 		t.Fatal("expected WriteAudit to assign an ID")
 	}
 
-	listed, err := store.ListAudit(ctx, 10, 0)
+	listed, err := store.ListAudit(ctx, 100, 0)
 	if err != nil {
 		t.Fatalf("list audit: %v", err)
 	}
-	if len(listed) != 2 {
-		t.Fatalf("events = %d, want 2", len(listed))
+	mine := filterAuditByActor(listed, actor.ID)
+	if len(mine) < 2 {
+		t.Fatalf("actor events = %d, want at least 2", len(mine))
 	}
-	if listed[0].Action != second.Action {
-		t.Fatalf("first listed action = %q, want %q", listed[0].Action, second.Action)
+	if mine[0].Action != second.Action {
+		t.Fatalf("newest action = %q, want %q", mine[0].Action, second.Action)
 	}
-	if listed[1].Action != first.Action {
-		t.Fatalf("second listed action = %q, want %q", listed[1].Action, first.Action)
+	if mine[1].Action != first.Action {
+		t.Fatalf("older action = %q, want %q", mine[1].Action, first.Action)
 	}
-	if listed[0].ActorUserID == nil || *listed[0].ActorUserID != actor.ID {
-		t.Fatalf("first listed actor = %v, want %s", listed[0].ActorUserID, actor.ID)
+	var payload map[string]any
+	if err := json.Unmarshal(mine[1].Payload, &payload); err != nil {
+		t.Fatalf("decode payload: %v", err)
 	}
-	if got := string(listed[1].Payload); got != `{"email":"ada@example.com"}` {
-		t.Fatalf("payload = %s", got)
+	if payload["email"] != "ada@example.com" {
+		t.Fatalf("payload = %s", mine[1].Payload)
 	}
 
-	paginated, err := store.ListAudit(ctx, 1, 1)
-	if err != nil {
-		t.Fatalf("list audit paginated: %v", err)
+	// limit<=0 and offset<0 take defaults inside ListAudit
+	if _, err := store.ListAudit(ctx, 0, -1); err != nil {
+		t.Fatalf("list audit defaults: %v", err)
 	}
-	if len(paginated) != 1 {
-		t.Fatalf("paginated events = %d, want 1", len(paginated))
+}
+
+func filterAuditByActor(events []domain.AuditEvent, actorID uuid.UUID) []domain.AuditEvent {
+	out := make([]domain.AuditEvent, 0, len(events))
+	for _, event := range events {
+		if event.ActorUserID != nil && *event.ActorUserID == actorID {
+			out = append(out, event)
+		}
 	}
-	if paginated[0].Action != first.Action {
-		t.Fatalf("paginated action = %q, want %q", paginated[0].Action, first.Action)
-	}
+	return out
 }

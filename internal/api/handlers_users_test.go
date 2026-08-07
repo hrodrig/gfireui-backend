@@ -200,6 +200,66 @@ func TestUsersAdminAPI(t *testing.T) {
 	})
 }
 
+func TestUsersLookupErrors(t *testing.T) {
+	t.Parallel()
+
+	admin := testRoleUser(t, domain.RoleAdministrator)
+	store := &fakeUserStore{
+		usersByEmail: map[string]*domain.User{admin.Email: admin},
+		usersByID:    map[uuid.UUID]*domain.User{admin.ID: admin},
+	}
+
+	t.Run("invalid uuid", func(t *testing.T) {
+		t.Parallel()
+		rec := performAdminRequest(t, store, admin, http.MethodGet, "/api/users/not-a-uuid", nil)
+		if rec.Code != http.StatusBadRequest {
+			t.Fatalf("status = %d", rec.Code)
+		}
+	})
+
+	t.Run("not found", func(t *testing.T) {
+		t.Parallel()
+		missing := uuid.MustParse("018f1f0f-0e3b-7c0c-9b77-1c0c0f0f0f77")
+		rec := performAdminRequest(t, store, admin, http.MethodGet, "/api/users/"+missing.String(), nil)
+		if rec.Code != http.StatusNotFound {
+			t.Fatalf("status = %d", rec.Code)
+		}
+	})
+
+	t.Run("create validation", func(t *testing.T) {
+		t.Parallel()
+		body := `{"first_name":"","last_name":"X","email":"x@example.com","role":"Operator","enabled":true,"password":"secret-password"}`
+		rec := performAdminRequest(t, store, admin, http.MethodPost, "/api/users", bytes.NewBufferString(body))
+		if rec.Code != http.StatusBadRequest {
+			t.Fatalf("status = %d", rec.Code)
+		}
+	})
+
+	t.Run("password required", func(t *testing.T) {
+		t.Parallel()
+		otherID := uuid.MustParse("018f1f0f-0e3b-7c0c-9b77-1c0c0f0f0f21")
+		store := &fakeUserStore{
+			usersByEmail: map[string]*domain.User{admin.Email: admin},
+			usersByID: map[uuid.UUID]*domain.User{
+				admin.ID: admin,
+				otherID: {
+					ID:           otherID,
+					FirstName:    "G",
+					LastName:     "H",
+					Email:        "g@example.com",
+					Role:         domain.RoleOperator,
+					Enabled:      true,
+					PasswordHash: mustHashPassword(t, "correct-password"),
+				},
+			},
+		}
+		rec := performAdminRequest(t, store, admin, http.MethodPost, "/api/users/"+otherID.String()+"/password", bytes.NewBufferString(`{"password":""}`))
+		if rec.Code != http.StatusBadRequest {
+			t.Fatalf("status = %d", rec.Code)
+		}
+	})
+}
+
 func TestRBACMatrix(t *testing.T) {
 	t.Parallel()
 

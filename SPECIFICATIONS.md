@@ -55,6 +55,10 @@ YAML + env prefix `GFIREUI_` (dots → underscores). See `gfireui-backend.exampl
 - `gfire.token` optional → empty means no `Authorization` header (GFire auth disabled / local)  
 - Startup logs (gfire-style): one-line banner on stderr, then structured `slog` `starting` / `listening`
 
+## Quality
+
+`make cover` starts compose Postgres, runs `go test ./...` with `GFIREUI_TEST_DSN`, and fails if total statement coverage is below `COVER_MIN_PERCENT` (default **80**, same floor as gghstats).
+
 ## Non-goals (v0.1)
 
 - Embedding in `gfire` binary  

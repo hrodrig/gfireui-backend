@@ -176,7 +176,7 @@ gfireui-backend/
 ```sh
 make lint
 make test
-make cover   # fails if total < COVER_MIN_PERCENT (default 50; raise to 80 before tag)
+make cover   # starts compose postgres; fails if total < COVER_MIN_PERCENT (default 80)
 ```
 
 **Compose (recommended):**

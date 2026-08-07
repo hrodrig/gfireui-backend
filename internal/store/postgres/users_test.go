@@ -85,4 +85,85 @@ func TestCreateUserAndGetUserByEmail(t *testing.T) {
 	if got.FirstName != user.FirstName || got.LastName != user.LastName || got.Role != user.Role || got.Enabled != user.Enabled {
 		t.Fatalf("got user = %#v, want %#v", got, user)
 	}
+
+	byID, err := store.GetUserByID(ctx, user.ID)
+	if err != nil {
+		t.Fatalf("get user by id: %v", err)
+	}
+	if byID.Email != email {
+		t.Fatalf("by id email = %q", byID.Email)
+	}
+
+	listed, err := store.ListUsers(ctx)
+	if err != nil {
+		t.Fatalf("list users: %v", err)
+	}
+	found := false
+	for _, item := range listed {
+		if item.ID == user.ID {
+			found = true
+			break
+		}
+	}
+	if !found {
+		t.Fatal("created user missing from ListUsers")
+	}
+
+	user.FirstName = "Augusta"
+	user.Enabled = false
+	if err := store.UpdateUser(ctx, user); err != nil {
+		t.Fatalf("update user: %v", err)
+	}
+	updated, err := store.GetUserByID(ctx, user.ID)
+	if err != nil {
+		t.Fatalf("reload updated user: %v", err)
+	}
+	if updated.FirstName != "Augusta" || updated.Enabled {
+		t.Fatalf("updated = %#v", updated)
+	}
+
+	if _, err := store.GetUserByEmail(ctx, "missing-"+email); err == nil {
+		t.Fatal("expected not found by email")
+	}
+	if _, err := store.GetUserByID(ctx, uuid.MustParse("018f1f0f-0e3b-7c0c-9b77-1c0c0f0f0f99")); err == nil {
+		t.Fatal("expected not found by id")
+	}
+	missing := &domain.User{
+		ID:           uuid.MustParse("018f1f0f-0e3b-7c0c-9b77-1c0c0f0f0f98"),
+		FirstName:    "No",
+		LastName:     "Such",
+		Email:        "nosuch-" + email,
+		Role:         domain.RoleGuest,
+		Enabled:      true,
+		PasswordHash: "hash",
+	}
+	if err := store.UpdateUser(ctx, missing); err == nil {
+		t.Fatal("expected update not found")
+	}
+	if err := store.CreateUser(ctx, nil); err == nil {
+		t.Fatal("expected nil create error")
+	}
+	if err := store.UpdateUser(ctx, nil); err == nil {
+		t.Fatal("expected nil update error")
+	}
+	if err := store.WriteAudit(ctx, nil); err == nil {
+		t.Fatal("expected nil audit error")
+	}
+}
+
+func TestOpenRejectsBadDSN(t *testing.T) {
+	dsn := os.Getenv("GFIREUI_TEST_DSN")
+	if dsn == "" {
+		t.Skip("GFIREUI_TEST_DSN unset")
+	}
+
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+
+	if _, err := postgres.Open(ctx, "://not-a-dsn"); err == nil {
+		t.Fatal("expected open error for invalid DSN")
+	}
+	if _, err := postgres.Open(ctx, "postgres://gfireui:gfireui@127.0.0.1:1/gfireui?sslmode=disable"); err == nil {
+		t.Fatal("expected open error for unreachable postgres")
+	}
 }
