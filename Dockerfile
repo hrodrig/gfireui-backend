@@ -21,7 +21,7 @@ RUN CGO_ENABLED=0 GOOS=${TARGETOS} GOARCH=${TARGETARCH} go build -trimpath \
 	-X 'github.com/hrodrig/gfireui-backend/internal/version.BuildDate=${BUILDDATE}'" \
 	-o /out/gfireui-backend ./cmd/gfireui-backend
 
-FROM gcr.io/distroless/static-debian12:nonroot
+FROM gcr.io/distroless/static-debian13:nonroot
 WORKDIR /app
 COPY --from=builder /out/gfireui-backend /app/gfireui-backend
 COPY migrations /app/migrations
