@@ -1,0 +1,51 @@
+# ───────────────────────────────────────────────────────────
+# GFireUI Backend configuration — copy to gfireui-backend.yaml
+# and adjust.
+#
+# Environment overrides: any key can be set as GFIREUI_<PATH>
+# with dots replaced by underscores. Examples:
+#   GFIREUI_SERVER_ADDR=:8090
+#   GFIREUI_DATABASE_DSN=postgres://gfireui:gfireui@localhost:5432/gfireui?sslmode=disable
+#   GFIREUI_AUTH_JWT_SECRET=change-me
+#   GFIREUI_GFIRE_BASE_URL=http://localhost:8080
+#   GFIREUI_GFIRE_TOKEN=gfire-service-bearer
+#   GFIREUI_BOOTSTRAP_ADMIN_EMAIL=admin@example.com
+#
+# Config file path: set GFIREUI_CONFIG or pass --config (future).
+# Start:  gfireui-backend
+# ───────────────────────────────────────────────────────────
+
+# ── HTTP server ─────────────────────────────────────────────
+server:
+  # Listen address (host:port). Default :8090.
+  addr: ":8090"
+
+# ── PostgreSQL (database gfireui) ───────────────────────────
+database:
+  # Full connection string (pgx format).
+  dsn: "postgres://gfireui:gfireui@localhost:5432/gfireui?sslmode=disable"
+
+# ── JWT authentication (browser sessions) ─────────────────
+auth:
+  # HS256 signing secret. Required in production.
+  jwt_secret: ""
+
+  # Access token lifetime. Default 24h.
+  token_ttl: 24h
+
+# ── Upstream GFire service ──────────────────────────────────
+gfire:
+  # GFire REST base URL (no trailing slash).
+  base_url: "http://localhost:8080"
+
+  # Service Bearer token for GFire /v1/* (never sent to browser).
+  token: ""
+
+# ── Bootstrap Administrator (first boot only) ───────────────
+# When the users table is empty and these are set, an Administrator
+# account is created on startup. Prefer env in production.
+bootstrap:
+  admin_email: ""
+  admin_password: ""
+  admin_first_name: ""
+  admin_last_name: ""
