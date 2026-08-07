@@ -6,9 +6,9 @@ import (
 	"fmt"
 
 	"github.com/google/uuid"
-	"github.com/jackc/pgx/v5"
 	"github.com/hrodrig/gfireui-backend/internal/domain"
 	"github.com/hrodrig/gfireui-backend/internal/store"
+	"github.com/jackc/pgx/v5"
 )
 
 const userColumns = `id, first_name, last_name, email, role, enabled, password_hash, created_at, updated_at`

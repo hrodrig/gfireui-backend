@@ -273,11 +273,11 @@ func buildCreateUser(req createUserRequest) (*domain.User, map[string]any, strin
 	}
 
 	user := &domain.User{
-		FirstName:    firstName,
-		LastName:     lastName,
-		Email:        email,
-		Role:         role,
-		Enabled:      *req.Enabled,
+		FirstName: firstName,
+		LastName:  lastName,
+		Email:     email,
+		Role:      role,
+		Enabled:   *req.Enabled,
 	}
 	payload := map[string]any{
 		"first_name": firstName,

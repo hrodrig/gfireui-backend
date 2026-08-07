@@ -30,8 +30,13 @@ Brief guide for AI agents working on this Go BFF.
 
 ## Build & test
 
+Makefile follows the **gghstats** layout (Build / Quality / Docker / Release).
+
 ```sh
-make test
-make build
-make run
+make lint         # gofmt -s check + go vet
+make test         # go test -race ./...
+make cover        # coverage gate (COVER_MIN_PERCENT, default 80)
+make build        # binary with version ldflags → ./gfireui-backend
+make compose-up   # compose with VERSION/COMMIT/BUILDDATE build-args
+make release-check  # lint + test + cover + security + docker-scan
 ```

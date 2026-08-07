@@ -43,10 +43,10 @@ type GFireConfig struct {
 
 // BootstrapConfig holds first-boot Administrator creation credentials.
 type BootstrapConfig struct {
-	AdminEmail      string `mapstructure:"admin_email"`
-	AdminPassword   string `mapstructure:"admin_password"`
-	AdminFirstName  string `mapstructure:"admin_first_name"`
-	AdminLastName   string `mapstructure:"admin_last_name"`
+	AdminEmail     string `mapstructure:"admin_email"`
+	AdminPassword  string `mapstructure:"admin_password"`
+	AdminFirstName string `mapstructure:"admin_first_name"`
+	AdminLastName  string `mapstructure:"admin_last_name"`
 }
 
 // Defaults returns a configuration with v0.1 defaults.

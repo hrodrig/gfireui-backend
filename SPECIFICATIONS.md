@@ -51,6 +51,10 @@ PostgreSQL database `gfireui` (own DSN). Tables: `users`, `audit_events` (see `m
 
 YAML + env prefix `GFIREUI_` (dots → underscores). See `gfireui-backend.example.yaml`.
 
+- `gfire.base_url` empty → process stays up; `/api/gfire/*` and `/api/ops/summary` fail until set  
+- `gfire.token` optional → empty means no `Authorization` header (GFire auth disabled / local)  
+- Startup logs (gfire-style): one-line banner on stderr, then structured `slog` `starting` / `listening`
+
 ## Non-goals (v0.1)
 
 - Embedding in `gfire` binary  

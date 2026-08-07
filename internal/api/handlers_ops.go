@@ -10,9 +10,9 @@ import (
 var opsJobStates = []string{"pending", "processing", "succeeded", "failed", "dead"}
 
 type opsSummaryResponse struct {
-	JobsByState map[string]int   `json:"jobs_by_state"`
+	JobsByState map[string]int       `json:"jobs_by_state"`
 	Queues      []gfire.QueueSummary `json:"queues"`
-	GeneratedAt time.Time        `json:"generated_at"`
+	GeneratedAt time.Time            `json:"generated_at"`
 }
 
 func (s *Server) handleOpsSummary(w http.ResponseWriter, r *http.Request) {

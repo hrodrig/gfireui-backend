@@ -38,7 +38,8 @@ gfire:
   # GFire REST base URL (no trailing slash).
   base_url: "http://localhost:8080"
 
-  # Service Bearer token for GFire /v1/* (never sent to browser).
+  # Service Bearer for GFire /v1/* (never sent to browser). Optional when
+  # GFire auth is disabled; empty → proxy without Authorization header.
   token: ""
 
 # ── Bootstrap Administrator (first boot only) ───────────────

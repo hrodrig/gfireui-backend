@@ -9,12 +9,16 @@ RUN go mod download
 COPY . .
 ARG TARGETOS=linux
 ARG TARGETARCH=amd64
-ARG APP_VERSION=0.1.0
-ARG GIT_COMMIT=unknown
-ARG GIT_BRANCH=unknown
-ARG BUILD_DATE=unknown
+ARG VERSION=dev
+ARG COMMIT=unknown
+ARG BRANCH=unknown
+ARG BUILDDATE=unknown
 RUN CGO_ENABLED=0 GOOS=${TARGETOS} GOARCH=${TARGETARCH} go build -trimpath \
-	-ldflags="-s -w -X github.com/hrodrig/gfireui-backend/internal/version.Version=${APP_VERSION} -X github.com/hrodrig/gfireui-backend/internal/version.Commit=${GIT_COMMIT} -X github.com/hrodrig/gfireui-backend/internal/version.Branch=${GIT_BRANCH} -X github.com/hrodrig/gfireui-backend/internal/version.BuildDate=${BUILD_DATE}" \
+	-ldflags="-s -w \
+	-X 'github.com/hrodrig/gfireui-backend/internal/version.Version=${VERSION}' \
+	-X 'github.com/hrodrig/gfireui-backend/internal/version.Commit=${COMMIT}' \
+	-X 'github.com/hrodrig/gfireui-backend/internal/version.Branch=${BRANCH}' \
+	-X 'github.com/hrodrig/gfireui-backend/internal/version.BuildDate=${BUILDDATE}'" \
 	-o /out/gfireui-backend ./cmd/gfireui-backend
 
 FROM gcr.io/distroless/static-debian12:nonroot

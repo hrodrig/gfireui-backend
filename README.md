@@ -37,7 +37,7 @@
 
 This is the **Backend-for-Frontend** for [GFireUI](https://github.com/hrodrig/gfireui). Humans authenticate here. Permissions are decided here. Every peek at jobs, queues, recurring definitions, and servers goes **through** this service to [GFire](https://github.com/hrodrig/gfire). The browser never sees GFire’s URL or service token.
 
-> **Status: scaffold in progress.** v0.1.0 — platform design locked; `/healthz` endpoint available.
+> **Status: v0.1 API surface on `develop`.** Auth, users, audit, thin GFire proxy, ops summary, compose smoke. UI repo still scaffolding.
 
 **Related tools (same maintainer):**
 - **[gfire](https://github.com/hrodrig/gfire)** — standalone background job service ([gfire.net](https://gfire.net))
@@ -171,15 +171,28 @@ gfireui-backend/
 
 ## Development
 
+**Quality gate (gghstats-style Makefile):**
+
+```sh
+make lint
+make test
+make cover   # fails if total < COVER_MIN_PERCENT (default 50; raise to 80 before tag)
+```
+
 **Compose (recommended):**
 
 ```sh
-export GFIREUI_GFIRE_BASE_URL=http://host.docker.internal:8080
-export GFIREUI_GFIRE_TOKEN=your-gfire-bearer   # if GFire auth enabled
-docker compose up --build
+# Auth-only smoke (no GFire): omit GFIREUI_GFIRE_* and use make compose-up
+make compose-up
 curl -sS http://127.0.0.1:8090/healthz
-# login with bootstrap admin (defaults in compose) via POST /api/auth/login
+
+# With upstream GFire (optional):
+export GFIREUI_GFIRE_BASE_URL=http://host.docker.internal:8080
+export GFIREUI_GFIRE_TOKEN=your-gfire-bearer   # omit if GFire auth disabled
+make compose-up
 ```
+
+`make compose-up` injects `VERSION` / `COMMIT` / `BUILDDATE` into the image so the startup banner matches local `make build`.
 
 **Local binary:**
 
@@ -189,10 +202,10 @@ make build
 export GFIREUI_DATABASE_DSN='postgres://gfireui:gfireui@127.0.0.1:5433/gfireui?sslmode=disable'
 export GFIREUI_AUTH_JWT_SECRET=dev-only
 make migrate-up   # requires golang-migrate CLI
-./bin/gfireui-backend serve
+./gfireui-backend serve
 ```
 
-Requires PostgreSQL (`gfireui` database) and a reachable **[gfire](https://github.com/hrodrig/gfire)** for proxy/ops routes.
+PostgreSQL (`gfireui` database) required for auth/users/audit. Reachable **[gfire](https://github.com/hrodrig/gfire)** required only for proxy/ops routes.
 
 **Images:** `Dockerfile` = compile-in-Docker for local/CI. `Dockerfile.release` = distroless runtime for GoReleaser (binary already built). Same split as sibling Go repos.
 
@@ -208,7 +221,7 @@ Requires PostgreSQL (`gfireui` database) and a reachable **[gfire](https://githu
 | [gfireui](https://github.com/hrodrig/gfireui) | Console frontend |
 | [GFire SPEC](https://github.com/hrodrig/gfire/blob/main/SPECIFICATIONS.md) | Engine behavior |
 
-`SPECIFICATIONS.md` / `ROADMAP.md` land with the first implementation band.
+See also `SPECIFICATIONS.md` (behavior contract) and `ROADMAP.md`.
 
 [↑ Back to top](#readme-top)
 

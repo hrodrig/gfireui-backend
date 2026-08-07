@@ -8,9 +8,9 @@ import (
 	"time"
 
 	"github.com/google/uuid"
-	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/hrodrig/gfireui-backend/internal/domain"
 	"github.com/hrodrig/gfireui-backend/internal/store/postgres"
+	"github.com/jackc/pgx/v5/pgxpool"
 )
 
 func ensureUsersSchema(ctx context.Context, dsn string) error {
