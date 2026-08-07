@@ -20,6 +20,11 @@ server:
   # Listen address (host:port). Default :8090.
   addr: ":8090"
 
+  # Comma-separated browser Origins allowed to call the BFF (CORS).
+  # Empty = no CORS headers (curl / same-origin only).
+  # Local SPA: http://127.0.0.1:5173,http://localhost:5173
+  cors_allowed_origins: ""
+
 # ── PostgreSQL (database gfireui) ───────────────────────────
 database:
   # Full connection string (pgx format).

@@ -139,31 +139,52 @@ func TestUsersAdminAPI(t *testing.T) {
 	t.Run("patch user", func(t *testing.T) {
 		t.Parallel()
 
+		target := *other
 		store := &fakeUserStore{
 			usersByEmail: map[string]*domain.User{
-				admin.Email: admin,
-				other.Email: other,
+				admin.Email:  admin,
+				target.Email: &target,
 			},
 			usersByID: map[uuid.UUID]*domain.User{
-				admin.ID: admin,
-				other.ID: other,
+				admin.ID:  admin,
+				target.ID: &target,
 			},
 		}
 		auditWriter := &fakeAuditWriter{}
 
 		body := `{"first_name":"Grace","last_name":"Hopper","email":"grace.ada@example.com","role":"Auditor","enabled":false}`
-		rec := performAdminRequestWithAudit(t, store, auditWriter, admin, http.MethodPatch, "/api/users/"+other.ID.String(), bytes.NewBufferString(body))
+		rec := performAdminRequestWithAudit(t, store, auditWriter, admin, http.MethodPatch, "/api/users/"+target.ID.String(), bytes.NewBufferString(body))
 
 		if rec.Code != http.StatusOK {
 			t.Fatalf("status = %d, want %d", rec.Code, http.StatusOK)
 		}
 
-		updated := store.usersByID[other.ID]
+		updated := store.usersByID[target.ID]
 		if updated.Email != "grace.ada@example.com" || updated.Role != domain.RoleAuditor || updated.Enabled {
 			t.Fatalf("updated user = %#v", updated)
 		}
 		if len(auditWriter.events) != 1 || auditWriter.events[0].Action != "users.update" {
 			t.Fatalf("audit events = %#v", auditWriter.events)
+		}
+	})
+
+	t.Run("cannot disable own account", func(t *testing.T) {
+		t.Parallel()
+
+		self := *admin
+		self.Enabled = true
+		store := &fakeUserStore{
+			usersByEmail: map[string]*domain.User{self.Email: &self},
+			usersByID:    map[uuid.UUID]*domain.User{self.ID: &self},
+		}
+
+		body := `{"enabled":false}`
+		rec := performAdminRequest(t, store, &self, http.MethodPatch, "/api/users/"+self.ID.String(), bytes.NewBufferString(body))
+		if rec.Code != http.StatusBadRequest {
+			t.Fatalf("status = %d, want %d", rec.Code, http.StatusBadRequest)
+		}
+		if !self.Enabled {
+			t.Fatal("own account should remain enabled")
 		}
 	})
 

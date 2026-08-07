@@ -57,8 +57,9 @@ func runServe(ctx context.Context, cfg *config.Config) error {
 	app.LogStartup(cfg)
 
 	deps := api.Deps{
-		JWTSecret: []byte(cfg.Auth.JWTSecret),
-		TokenTTL:  cfg.Auth.TokenTTL,
+		JWTSecret:          []byte(cfg.Auth.JWTSecret),
+		TokenTTL:           cfg.Auth.TokenTTL,
+		CORSAllowedOrigins: cfg.Server.CORSOrigins(),
 	}
 
 	var store *postgres.Store

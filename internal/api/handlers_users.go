@@ -123,6 +123,11 @@ func (s *Server) handleUserPatch(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	if actor, ok := auth.UserFromContext(r.Context()); ok && actor.ID == existing.ID && req.Enabled != nil && *req.Enabled != existing.Enabled {
+		writeError(w, http.StatusBadRequest, "cannot enable or disable your own account")
+		return
+	}
+
 	payload, err := applyUserPatch(existing, req)
 	if err != nil {
 		writeError(w, http.StatusBadRequest, err.Error())

@@ -14,7 +14,7 @@ Go BFF for [GFireUI](https://github.com/hrodrig/gfireui). Owns human auth, RBAC,
 | POST | `/api/auth/login` | no | — | `{email,password}` → `{token,user}` |
 | GET | `/api/auth/me` | JWT | any enabled | current user |
 | GET/POST | `/api/users` | JWT | Administrator | list / create |
-| GET/PATCH | `/api/users/{id}` | JWT | Administrator | get / update |
+| GET/PATCH | `/api/users/{id}` | JWT | Administrator | get / update; cannot change own `enabled` |
 | POST | `/api/users/{id}/password` | JWT | Administrator | set password |
 | GET | `/api/audit` | JWT | Administrator, Auditor | paginated audit |
 | * | `/api/gfire/{path...}` | JWT | see RBAC | thin proxy to GFire |
@@ -55,6 +55,7 @@ Family convention: `GFIRE_*` (engine), `GFIREUI_BACKEND_*` (this BFF), `PUBLIC_G
 
 - `gfire.base_url` empty → process stays up; `/api/gfire/*` and `/api/ops/summary` fail until set  
 - `gfire.token` optional → empty means no `Authorization` header (GFire auth disabled / local)  
+- `server.cors_allowed_origins` — comma-separated browser Origins for CORS; empty = no CORS headers; compose defaults `http://127.0.0.1:5173,http://localhost:5173`  
 - Startup logs (gfire-style): one-line banner on stderr, then structured `slog` `starting` / `listening`
 
 ## Quality

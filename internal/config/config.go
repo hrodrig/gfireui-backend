@@ -22,6 +22,25 @@ type Config struct {
 // ServerConfig holds HTTP listener settings.
 type ServerConfig struct {
 	Addr string `mapstructure:"addr"`
+	// CORSAllowedOrigins is a comma-separated list of browser Origins allowed
+	// to call the BFF (e.g. http://127.0.0.1:5173,http://localhost:5173).
+	CORSAllowedOrigins string `mapstructure:"cors_allowed_origins"`
+}
+
+// CORSOrigins returns trimmed allowed Origin values.
+func (s ServerConfig) CORSOrigins() []string {
+	if strings.TrimSpace(s.CORSAllowedOrigins) == "" {
+		return nil
+	}
+	parts := strings.Split(s.CORSAllowedOrigins, ",")
+	out := make([]string, 0, len(parts))
+	for _, p := range parts {
+		p = strings.TrimSpace(p)
+		if p != "" {
+			out = append(out, p)
+		}
+	}
+	return out
 }
 
 // DatabaseConfig holds PostgreSQL connection settings.
@@ -64,6 +83,7 @@ func Defaults() Config {
 func bindEnv(v *viper.Viper) {
 	keys := []string{
 		"server.addr",
+		"server.cors_allowed_origins",
 		"database.dsn",
 		"auth.jwt_secret",
 		"auth.token_ttl",

@@ -42,12 +42,13 @@ type GFireClient interface {
 
 // Deps are the runtime dependencies required by the HTTP server.
 type Deps struct {
-	Store      UserStore
-	AuditStore AuditStore
-	JWTSecret  []byte
-	TokenTTL   time.Duration
-	Audit      AuditWriter
-	GFire      GFireClient
+	Store              UserStore
+	AuditStore         AuditStore
+	JWTSecret          []byte
+	TokenTTL           time.Duration
+	Audit              AuditWriter
+	GFire              GFireClient
+	CORSAllowedOrigins []string
 }
 
 type Server struct {
@@ -79,7 +80,7 @@ func NewServer(deps Deps) http.Handler {
 	s.mux.Handle("GET /api/ops/summary", s.authMiddleware(RequireRoles(domain.RoleAdministrator, domain.RoleOperator, domain.RoleAuditor)(http.HandlerFunc(s.handleOpsSummary))))
 	s.mux.Handle("/api/gfire", s.authMiddleware(http.HandlerFunc(s.handleGFireProxy)))
 	s.mux.Handle("/api/gfire/{path...}", s.authMiddleware(http.HandlerFunc(s.handleGFireProxy)))
-	return s.mux
+	return withCORS(s.mux, deps.CORSAllowedOrigins)
 }
 
 func (s *Server) handleHealthz(w http.ResponseWriter, _ *http.Request) {

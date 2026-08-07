@@ -41,6 +41,8 @@ services:
       - "8090:8090"
     environment:
       GFIREUI_BACKEND_SERVER_ADDR: ":8090"
+      # SPA (gfireui Vite) origins — required for browser login from :5173
+      GFIREUI_BACKEND_SERVER_CORS_ALLOWED_ORIGINS: "${GFIREUI_BACKEND_SERVER_CORS_ALLOWED_ORIGINS:-http://127.0.0.1:5173,http://localhost:5173}"
       GFIREUI_BACKEND_DATABASE_DSN: "postgres://gfireui:gfireui@postgres:5432/gfireui?sslmode=disable"
       GFIREUI_BACKEND_AUTH_JWT_SECRET: "dev-only-change-me"
       GFIREUI_BACKEND_AUTH_TOKEN_TTL: "24h"
@@ -54,4 +56,6 @@ services:
       GFIREUI_BACKEND_BOOTSTRAP_ADMIN_LAST_NAME: "${GFIREUI_BACKEND_BOOTSTRAP_ADMIN_LAST_NAME:-User}"
 
 volumes:
+  # Fixed name — shared with gfireui compose (same local DB).
   gfireui_pg:
+    name: gfireui_pg
