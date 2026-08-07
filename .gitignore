@@ -1,0 +1,65 @@
+# Whitelist-only: ignore everything (including dotfiles) unless listed below.
+
+*
+
+# Allow descending into whitelisted directories only
+!*/
+
+# ── Root files ──
+!.gitignore
+!.dockerignore
+!go.mod
+!go.sum
+!Makefile
+!docker-compose.yml
+!AGENTS.md
+!ROADMAP.md
+!SPECIFICATIONS.md
+!README.md
+!LICENSE
+!VERSION
+!CHANGELOG.md
+!SECURITY.md
+!CONTRIBUTING.md
+!CODE_OF_CONDUCT.md
+!Dockerfile
+!Dockerfile.release
+!gfireui-backend.example.yaml
+
+# ── Docs / assets ──
+!docs/
+!docs/**
+
+# ── GitHub ──
+!.github/
+!.github/**
+!.github/**/**
+
+# ── Source tree ──
+!cmd/
+!cmd/**/
+!cmd/**/*
+!internal/
+!internal/**/
+!internal/**/*
+!migrations/
+!migrations/**/
+!migrations/**/*
+!test/
+!test/**/
+!test/**/*
+
+# ── Dotfiles/dotdirs (re-ignore after !*/) ──
+.*
+**/.*/
+**/.**
+!.gitignore
+!.dockerignore
+!.goreleaser.yaml
+!.github/
+!.github/**
+# !.golangci.yml   # when added, uncomment here (after dot block)
+
+# ── Build artifacts ──
+coverage.out
+bin/
