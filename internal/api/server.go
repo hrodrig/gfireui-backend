@@ -3,6 +3,7 @@ package api
 import (
 	"context"
 	"encoding/json"
+	"io"
 	"net/http"
 	"time"
 
@@ -31,6 +32,11 @@ type AuditWriter interface {
 	WriteAudit(ctx context.Context, event *domain.AuditEvent) error
 }
 
+// GFireClient proxies HTTP requests to the upstream GFire service.
+type GFireClient interface {
+	Do(ctx context.Context, method, path string, body io.Reader) (*http.Response, error)
+}
+
 // Deps are the runtime dependencies required by the HTTP server.
 type Deps struct {
 	Store      UserStore
@@ -38,6 +44,7 @@ type Deps struct {
 	JWTSecret  []byte
 	TokenTTL   time.Duration
 	Audit      AuditWriter
+	GFire      GFireClient
 }
 
 type Server struct {
@@ -66,6 +73,8 @@ func NewServer(deps Deps) http.Handler {
 	s.mux.Handle("GET /api/users/{id}", s.authMiddleware(RequireRoles(domain.RoleAdministrator)(http.HandlerFunc(s.handleUserGet))))
 	s.mux.Handle("PATCH /api/users/{id}", s.authMiddleware(RequireRoles(domain.RoleAdministrator)(http.HandlerFunc(s.handleUserPatch))))
 	s.mux.Handle("POST /api/users/{id}/password", s.authMiddleware(RequireRoles(domain.RoleAdministrator)(http.HandlerFunc(s.handleUserPassword))))
+	s.mux.Handle("/api/gfire", s.authMiddleware(http.HandlerFunc(s.handleGFireProxy)))
+	s.mux.Handle("/api/gfire/{path...}", s.authMiddleware(http.HandlerFunc(s.handleGFireProxy)))
 	return s.mux
 }
 

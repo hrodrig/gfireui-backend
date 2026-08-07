@@ -11,6 +11,7 @@ import (
 
 	"github.com/hrodrig/gfireui-backend/internal/api"
 	"github.com/hrodrig/gfireui-backend/internal/config"
+	"github.com/hrodrig/gfireui-backend/internal/gfire"
 	"github.com/hrodrig/gfireui-backend/internal/store/postgres"
 )
 
@@ -40,6 +41,16 @@ func main() {
 		deps.Audit = store
 	} else {
 		log.Printf("warning: database.dsn empty — /api/auth/* will fail until configured")
+	}
+
+	if cfg.GFire.BaseURL == "" && cfg.GFire.Token == "" {
+		log.Printf("warning: gfire.base_url and gfire.token empty — /api/gfire/* will fail until configured")
+	} else {
+		client, err := gfire.NewClient(cfg.GFire.BaseURL, cfg.GFire.Token, nil)
+		if err != nil {
+			log.Fatalf("configure gfire client: %v", err)
+		}
+		deps.GFire = client
 	}
 
 	srv := &http.Server{
