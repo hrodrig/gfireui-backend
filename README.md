@@ -37,7 +37,7 @@
 
 This is the **Backend-for-Frontend** for [GFireUI](https://github.com/hrodrig/gfireui). Humans authenticate here. Permissions are decided here. Every peek at jobs, queues, recurring definitions, and servers goes **through** this service to [GFire](https://github.com/hrodrig/gfire). The browser never sees GFire’s URL or service token.
 
-> **Status: design approved, implementation starting.** v0.1.0 — platform design locked; no runnable binary yet.
+> **Status: scaffold in progress.** v0.1.0 — platform design locked; `/healthz` endpoint available.
 
 **Related tools (same maintainer):**
 - **[gfire](https://github.com/hrodrig/gfire)** — standalone background job service ([gfire.net](https://gfire.net))
@@ -137,7 +137,7 @@ Signing key + GFire Bearer: **env/config only** in v0.1.
 | Item | State |
 | ---- | ----- |
 | Platform design | ✅ Approved 2026-08-06 |
-| Go module / `cmd` | ⬜ |
+| Go module / `cmd` | ✅ |
 | Migrations + auth | ⬜ |
 | GFire proxy + RBAC | ⬜ |
 | Docker Compose | ⬜ |
