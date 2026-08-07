@@ -27,7 +27,7 @@ MIGRATIONS_DIR ?= migrations
 ifneq ($(DATABASE_URL),)
 MIGRATE_DSN := $(DATABASE_URL)
 else
-MIGRATE_DSN := $(GFIREUI_DATABASE_DSN)
+MIGRATE_DSN := $(GFIREUI_BACKEND_DATABASE_DSN)
 endif
 
 .DEFAULT_GOAL := help
@@ -102,11 +102,11 @@ compose-down:
 	docker compose down
 
 migrate-up:
-	@test -n "$(MIGRATE_DSN)" || (echo "Set DATABASE_URL or GFIREUI_DATABASE_DSN" && exit 1)
+	@test -n "$(MIGRATE_DSN)" || (echo "Set DATABASE_URL or GFIREUI_BACKEND_DATABASE_DSN" && exit 1)
 	$(MIGRATE) -path $(MIGRATIONS_DIR) -database "$(MIGRATE_DSN)" up
 
 migrate-down:
-	@test -n "$(MIGRATE_DSN)" || (echo "Set DATABASE_URL or GFIREUI_DATABASE_DSN" && exit 1)
+	@test -n "$(MIGRATE_DSN)" || (echo "Set DATABASE_URL or GFIREUI_BACKEND_DATABASE_DSN" && exit 1)
 	$(MIGRATE) -path $(MIGRATIONS_DIR) -database "$(MIGRATE_DSN)" down 1
 
 test:
@@ -119,7 +119,7 @@ cover:
 		docker compose exec -T postgres pg_isready -U gfireui -d gfireui >/dev/null 2>&1 && break; \
 		sleep 1; \
 	done
-	GFIREUI_TEST_DSN="$(COVER_DSN)" go test ./... -coverprofile=coverage.out -covermode=atomic -count=1
+	GFIREUI_BACKEND_TEST_DSN="$(COVER_DSN)" go test ./... -coverprofile=coverage.out -covermode=atomic -count=1
 	@total=$$(go tool cover -func=coverage.out | tail -1); echo "$$total"; \
 	pct=$$(echo "$$total" | awk '{print $$NF}' | tr -d '%'); \
 	awk -v p="$$pct" -v min="$(COVER_MIN_PERCENT)" 'BEGIN { if ((p+0) < (min+0)) { printf "coverage %s%% must be >= %s%%\n", p, min; exit 1 } }'
@@ -163,8 +163,8 @@ docker-scan: docker-build
 docker-run:
 	$(check-docker)
 	docker run --rm -p 8090:8090 \
-		-e GFIREUI_SERVER_ADDR=:8090 \
-		-e GFIREUI_AUTH_JWT_SECRET=dev-only-change-me \
+		-e GFIREUI_BACKEND_SERVER_ADDR=:8090 \
+		-e GFIREUI_BACKEND_AUTH_JWT_SECRET=dev-only-change-me \
 		$(BINARY):$(VERSION)
 
 tools:

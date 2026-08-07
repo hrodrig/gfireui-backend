@@ -127,7 +127,7 @@ Signing key + GFire Bearer: **env/config only** in v0.1.
 
 ## Bootstrap
 
-1. **First boot (env):** when `users` is empty, set `GFIREUI_BOOTSTRAP_ADMIN_EMAIL`, `GFIREUI_BOOTSTRAP_ADMIN_PASSWORD`, `GFIREUI_BOOTSTRAP_ADMIN_FIRST_NAME`, `GFIREUI_BOOTSTRAP_ADMIN_LAST_NAME`.  
+1. **First boot (env):** when `users` is empty, set `GFIREUI_BACKEND_BOOTSTRAP_ADMIN_EMAIL`, `GFIREUI_BACKEND_BOOTSTRAP_ADMIN_PASSWORD`, `GFIREUI_BACKEND_BOOTSTRAP_ADMIN_FIRST_NAME`, `GFIREUI_BACKEND_BOOTSTRAP_ADMIN_LAST_NAME`.  
 2. **CLI:** `gfireui-backend user create --email … --password … --role Administrator --first-name … --last-name …`
 
 [↑ Back to top](#readme-top)
@@ -182,13 +182,13 @@ make cover   # starts compose postgres; fails if total < COVER_MIN_PERCENT (defa
 **Compose (recommended):**
 
 ```sh
-# Auth-only smoke (no GFire): omit GFIREUI_GFIRE_* and use make compose-up
+# Auth-only smoke (no GFire): omit GFIREUI_BACKEND_GFIRE_* and use make compose-up
 make compose-up
 curl -sS http://127.0.0.1:8090/healthz
 
 # With upstream GFire (optional):
-export GFIREUI_GFIRE_BASE_URL=http://host.docker.internal:8080
-export GFIREUI_GFIRE_TOKEN=your-gfire-bearer   # omit if GFire auth disabled
+export GFIREUI_BACKEND_GFIRE_BASE_URL=http://host.docker.internal:8080
+export GFIREUI_BACKEND_GFIRE_TOKEN=your-gfire-bearer   # omit if GFire auth disabled
 make compose-up
 ```
 
@@ -199,8 +199,8 @@ make compose-up
 ```sh
 make test
 make build
-export GFIREUI_DATABASE_DSN='postgres://gfireui:gfireui@127.0.0.1:5433/gfireui?sslmode=disable'
-export GFIREUI_AUTH_JWT_SECRET=dev-only
+export GFIREUI_BACKEND_DATABASE_DSN='postgres://gfireui:gfireui@127.0.0.1:5433/gfireui?sslmode=disable'
+export GFIREUI_BACKEND_AUTH_JWT_SECRET=dev-only
 make migrate-up   # requires golang-migrate CLI
 ./gfireui-backend serve
 ```

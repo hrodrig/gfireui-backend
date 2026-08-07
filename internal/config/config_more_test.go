@@ -36,14 +36,14 @@ gfire:
 		t.Fatalf("gfire = %#v", cfg.GFire)
 	}
 
-	t.Setenv("GFIREUI_CONFIG", path)
-	t.Setenv("GFIREUI_SERVER_ADDR", "")
+	t.Setenv("GFIREUI_BACKEND_CONFIG", path)
+	t.Setenv("GFIREUI_BACKEND_SERVER_ADDR", "")
 	cfg2, err := config.Load("")
 	if err != nil {
 		t.Fatal(err)
 	}
 	if cfg2.Auth.JWTSecret != "from-file" {
-		t.Fatalf("via GFIREUI_CONFIG: %#v", cfg2)
+		t.Fatalf("via GFIREUI_BACKEND_CONFIG: %#v", cfg2)
 	}
 
 	if _, err := config.Load(filepath.Join(dir, "missing.yaml")); err == nil {

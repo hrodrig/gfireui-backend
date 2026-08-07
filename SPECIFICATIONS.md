@@ -49,7 +49,9 @@ PostgreSQL database `gfireui` (own DSN). Tables: `users`, `audit_events` (see `m
 
 ## Config
 
-YAML + env prefix `GFIREUI_` (dots → underscores). See `gfireui-backend.example.yaml`.
+YAML + env prefix `GFIREUI_BACKEND_` (dots → underscores). See `gfireui-backend.example.yaml`.
+
+Family convention: `GFIRE_*` (engine), `GFIREUI_BACKEND_*` (this BFF), `PUBLIC_GFIREUI_*` (SPA browser-public).
 
 - `gfire.base_url` empty → process stays up; `/api/gfire/*` and `/api/ops/summary` fail until set  
 - `gfire.token` optional → empty means no `Authorization` header (GFire auth disabled / local)  
@@ -57,7 +59,7 @@ YAML + env prefix `GFIREUI_` (dots → underscores). See `gfireui-backend.exampl
 
 ## Quality
 
-`make cover` starts compose Postgres, runs `go test ./...` with `GFIREUI_TEST_DSN`, and fails if total statement coverage is below `COVER_MIN_PERCENT` (default **80**, same floor as gghstats).
+`make cover` starts compose Postgres, runs `go test ./...` with `GFIREUI_BACKEND_TEST_DSN`, and fails if total statement coverage is below `COVER_MIN_PERCENT` (default **80**, same floor as gghstats).
 
 ## Non-goals (v0.1)
 

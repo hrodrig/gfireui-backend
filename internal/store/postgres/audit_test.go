@@ -46,9 +46,9 @@ func ensureAuditSchema(ctx context.Context, dsn string) error {
 }
 
 func TestWriteAuditAndListAudit(t *testing.T) {
-	dsn := os.Getenv("GFIREUI_TEST_DSN")
+	dsn := os.Getenv("GFIREUI_BACKEND_TEST_DSN")
 	if dsn == "" {
-		t.Skip("GFIREUI_TEST_DSN unset")
+		t.Skip("GFIREUI_BACKEND_TEST_DSN unset")
 	}
 
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)

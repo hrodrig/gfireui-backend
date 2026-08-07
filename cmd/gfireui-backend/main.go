@@ -23,7 +23,7 @@ import (
 )
 
 func main() {
-	cfgPath := os.Getenv("GFIREUI_CONFIG")
+	cfgPath := os.Getenv("GFIREUI_BACKEND_CONFIG")
 	ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt, syscall.SIGTERM)
 	defer stop()
 

@@ -219,7 +219,7 @@ EOF
 
 ```go
 func TestLoad_EnvOverridesAddr(t *testing.T) {
-	t.Setenv("GFIREUI_SERVER_ADDR", "127.0.0.1:9090")
+	t.Setenv("GFIREUI_BACKEND_SERVER_ADDR", "127.0.0.1:9090")
 	cfg, err := config.Load("") // empty path = defaults only + env
 	if err != nil {
 		t.Fatal(err)
@@ -236,7 +236,7 @@ func TestLoad_EnvOverridesAddr(t *testing.T) {
 go test ./internal/config/ -count=1
 ```
 
-- [ ] **Step 3: Implement Load** using viper (`GFIREUI` env prefix, `.` → `_`) or equivalent; default addr `:8090`.
+- [ ] **Step 3: Implement Load** using viper (`GFIREUI_BACKEND` env prefix, `.` → `_`) or equivalent; default addr `:8090`.
 
 - [ ] **Step 4: Example YAML** documenting every key used in v0.1.
 
@@ -321,7 +321,7 @@ git commit -m "feat: domain types and initial Postgres migrations"
 
 **Files:**
 - Create: `internal/store/postgres/postgres.go`, `users.go`, `users_test.go`
-- Test: integration with `GFIREUI_TEST_DSN` or dockertest; skip if unset
+- Test: integration with `GFIREUI_BACKEND_TEST_DSN` or dockertest; skip if unset
 
 **Interfaces:**
 - Produces:

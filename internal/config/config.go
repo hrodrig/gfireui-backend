@@ -85,11 +85,11 @@ func setViperDefaults(v *viper.Viper) {
 	v.SetDefault("auth.token_ttl", d.Auth.TokenTTL)
 }
 
-// Load reads configuration from file path and GFIREUI_* environment variables.
-// An empty path uses defaults plus env; GFIREUI_CONFIG selects a file when path is empty.
+// Load reads configuration from file path and GFIREUI_BACKEND_* environment variables.
+// An empty path uses defaults plus env; GFIREUI_BACKEND_CONFIG selects a file when path is empty.
 func Load(path string) (*Config, error) {
 	v := viper.New()
-	v.SetEnvPrefix("GFIREUI")
+	v.SetEnvPrefix("GFIREUI_BACKEND")
 	v.SetEnvKeyReplacer(strings.NewReplacer(".", "_"))
 	setViperDefaults(v)
 	bindEnv(v)
@@ -99,10 +99,10 @@ func Load(path string) (*Config, error) {
 		if err := v.ReadInConfig(); err != nil {
 			return nil, fmt.Errorf("read config: %w", err)
 		}
-	} else if p := os.Getenv("GFIREUI_CONFIG"); p != "" {
+	} else if p := os.Getenv("GFIREUI_BACKEND_CONFIG"); p != "" {
 		v.SetConfigFile(p)
 		if err := v.ReadInConfig(); err != nil {
-			return nil, fmt.Errorf("read GFIREUI_CONFIG: %w", err)
+			return nil, fmt.Errorf("read GFIREUI_BACKEND_CONFIG: %w", err)
 		}
 	}
 

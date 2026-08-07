@@ -13,9 +13,9 @@ import (
 )
 
 func TestRunServeWithDatabaseAndBootstrapSkip(t *testing.T) {
-	dsn := os.Getenv("GFIREUI_TEST_DSN")
+	dsn := os.Getenv("GFIREUI_BACKEND_TEST_DSN")
 	if dsn == "" {
-		t.Skip("GFIREUI_TEST_DSN unset")
+		t.Skip("GFIREUI_BACKEND_TEST_DSN unset")
 	}
 
 	clearGFireUIEnv(t)
@@ -27,12 +27,12 @@ func TestRunServeWithDatabaseAndBootstrapSkip(t *testing.T) {
 	addr := ln.Addr().String()
 	_ = ln.Close()
 
-	t.Setenv("GFIREUI_SERVER_ADDR", addr)
-	t.Setenv("GFIREUI_AUTH_JWT_SECRET", "test-secret")
-	t.Setenv("GFIREUI_DATABASE_DSN", dsn)
+	t.Setenv("GFIREUI_BACKEND_SERVER_ADDR", addr)
+	t.Setenv("GFIREUI_BACKEND_AUTH_JWT_SECRET", "test-secret")
+	t.Setenv("GFIREUI_BACKEND_DATABASE_DSN", dsn)
 	// Leave bootstrap empty so validate passes and bootstrap is disabled.
-	t.Setenv("GFIREUI_GFIRE_BASE_URL", "http://127.0.0.1:9")
-	t.Setenv("GFIREUI_GFIRE_TOKEN", "tok")
+	t.Setenv("GFIREUI_BACKEND_GFIRE_BASE_URL", "http://127.0.0.1:9")
+	t.Setenv("GFIREUI_BACKEND_GFIRE_TOKEN", "tok")
 
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
@@ -68,14 +68,14 @@ func TestRunServeWithDatabaseAndBootstrapSkip(t *testing.T) {
 }
 
 func TestRunUserCreatePersists(t *testing.T) {
-	dsn := os.Getenv("GFIREUI_TEST_DSN")
+	dsn := os.Getenv("GFIREUI_BACKEND_TEST_DSN")
 	if dsn == "" {
-		t.Skip("GFIREUI_TEST_DSN unset")
+		t.Skip("GFIREUI_BACKEND_TEST_DSN unset")
 	}
 
 	clearGFireUIEnv(t)
-	t.Setenv("GFIREUI_AUTH_JWT_SECRET", "test-secret")
-	t.Setenv("GFIREUI_DATABASE_DSN", dsn)
+	t.Setenv("GFIREUI_BACKEND_AUTH_JWT_SECRET", "test-secret")
+	t.Setenv("GFIREUI_BACKEND_DATABASE_DSN", dsn)
 
 	email := fmt.Sprintf("cli-%s@example.com", uuid.NewString())
 	err := run(context.Background(), "", []string{

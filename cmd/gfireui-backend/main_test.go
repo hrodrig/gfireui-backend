@@ -14,7 +14,7 @@ import (
 
 func TestRunUnknownCommand(t *testing.T) {
 	clearGFireUIEnv(t)
-	t.Setenv("GFIREUI_AUTH_JWT_SECRET", "test-secret")
+	t.Setenv("GFIREUI_BACKEND_AUTH_JWT_SECRET", "test-secret")
 
 	err := run(context.Background(), "", []string{"nope"})
 	if err == nil || !strings.Contains(err.Error(), `unknown command "nope"`) {
@@ -24,7 +24,7 @@ func TestRunUnknownCommand(t *testing.T) {
 
 func TestRunServeRejectsExtraArgs(t *testing.T) {
 	clearGFireUIEnv(t)
-	t.Setenv("GFIREUI_AUTH_JWT_SECRET", "test-secret")
+	t.Setenv("GFIREUI_BACKEND_AUTH_JWT_SECRET", "test-secret")
 
 	err := run(context.Background(), "", []string{"serve", "extra"})
 	if err == nil || !strings.Contains(err.Error(), "serve does not accept arguments") {
@@ -34,7 +34,7 @@ func TestRunServeRejectsExtraArgs(t *testing.T) {
 
 func TestRunUserMissingSubcommand(t *testing.T) {
 	clearGFireUIEnv(t)
-	t.Setenv("GFIREUI_AUTH_JWT_SECRET", "test-secret")
+	t.Setenv("GFIREUI_BACKEND_AUTH_JWT_SECRET", "test-secret")
 
 	err := run(context.Background(), "", []string{"user"})
 	if err == nil || !strings.Contains(err.Error(), "missing user subcommand") {
@@ -44,7 +44,7 @@ func TestRunUserMissingSubcommand(t *testing.T) {
 
 func TestRunUserUnknownSubcommand(t *testing.T) {
 	clearGFireUIEnv(t)
-	t.Setenv("GFIREUI_AUTH_JWT_SECRET", "test-secret")
+	t.Setenv("GFIREUI_BACKEND_AUTH_JWT_SECRET", "test-secret")
 
 	err := run(context.Background(), "", []string{"user", "delete"})
 	if err == nil || !strings.Contains(err.Error(), `unknown user subcommand "delete"`) {
@@ -54,7 +54,7 @@ func TestRunUserUnknownSubcommand(t *testing.T) {
 
 func TestRunUserCreateRequiresDSN(t *testing.T) {
 	clearGFireUIEnv(t)
-	t.Setenv("GFIREUI_AUTH_JWT_SECRET", "test-secret")
+	t.Setenv("GFIREUI_BACKEND_AUTH_JWT_SECRET", "test-secret")
 
 	err := run(context.Background(), "", []string{
 		"user", "create",
@@ -71,7 +71,7 @@ func TestRunUserCreateRequiresDSN(t *testing.T) {
 
 func TestRunUserCreateFlagParseError(t *testing.T) {
 	clearGFireUIEnv(t)
-	t.Setenv("GFIREUI_AUTH_JWT_SECRET", "test-secret")
+	t.Setenv("GFIREUI_BACKEND_AUTH_JWT_SECRET", "test-secret")
 
 	err := run(context.Background(), "", []string{"user", "create", "-bogus"})
 	if err == nil {
@@ -89,11 +89,11 @@ func TestRunServeStartsAndShutsDown(t *testing.T) {
 	addr := ln.Addr().String()
 	_ = ln.Close()
 
-	t.Setenv("GFIREUI_SERVER_ADDR", addr)
-	t.Setenv("GFIREUI_AUTH_JWT_SECRET", "test-secret")
-	t.Setenv("GFIREUI_DATABASE_DSN", "")
-	t.Setenv("GFIREUI_GFIRE_BASE_URL", "")
-	t.Setenv("GFIREUI_GFIRE_TOKEN", "")
+	t.Setenv("GFIREUI_BACKEND_SERVER_ADDR", addr)
+	t.Setenv("GFIREUI_BACKEND_AUTH_JWT_SECRET", "test-secret")
+	t.Setenv("GFIREUI_BACKEND_DATABASE_DSN", "")
+	t.Setenv("GFIREUI_BACKEND_GFIRE_BASE_URL", "")
+	t.Setenv("GFIREUI_BACKEND_GFIRE_TOKEN", "")
 
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
@@ -138,11 +138,11 @@ func TestRunServeWithGFireClientNoToken(t *testing.T) {
 	addr := ln.Addr().String()
 	_ = ln.Close()
 
-	t.Setenv("GFIREUI_SERVER_ADDR", addr)
-	t.Setenv("GFIREUI_AUTH_JWT_SECRET", "test-secret")
-	t.Setenv("GFIREUI_DATABASE_DSN", "")
-	t.Setenv("GFIREUI_GFIRE_BASE_URL", "http://127.0.0.1:9")
-	t.Setenv("GFIREUI_GFIRE_TOKEN", "")
+	t.Setenv("GFIREUI_BACKEND_SERVER_ADDR", addr)
+	t.Setenv("GFIREUI_BACKEND_AUTH_JWT_SECRET", "test-secret")
+	t.Setenv("GFIREUI_BACKEND_DATABASE_DSN", "")
+	t.Setenv("GFIREUI_BACKEND_GFIRE_BASE_URL", "http://127.0.0.1:9")
+	t.Setenv("GFIREUI_BACKEND_GFIRE_TOKEN", "")
 
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
@@ -179,8 +179,8 @@ func TestRunServeWithGFireClientNoToken(t *testing.T) {
 
 func TestRunServeBadGFireURL(t *testing.T) {
 	clearGFireUIEnv(t)
-	t.Setenv("GFIREUI_AUTH_JWT_SECRET", "test-secret")
-	t.Setenv("GFIREUI_GFIRE_BASE_URL", "://bad")
+	t.Setenv("GFIREUI_BACKEND_AUTH_JWT_SECRET", "test-secret")
+	t.Setenv("GFIREUI_BACKEND_GFIRE_BASE_URL", "://bad")
 
 	err := run(context.Background(), "", []string{"serve"})
 	if err == nil || !strings.Contains(err.Error(), "configure gfire client") {
@@ -234,17 +234,17 @@ auth:
 func clearGFireUIEnv(t *testing.T) {
 	t.Helper()
 	for _, key := range []string{
-		"GFIREUI_SERVER_ADDR",
-		"GFIREUI_DATABASE_DSN",
-		"GFIREUI_AUTH_JWT_SECRET",
-		"GFIREUI_AUTH_TOKEN_TTL",
-		"GFIREUI_GFIRE_BASE_URL",
-		"GFIREUI_GFIRE_TOKEN",
-		"GFIREUI_BOOTSTRAP_ADMIN_EMAIL",
-		"GFIREUI_BOOTSTRAP_ADMIN_PASSWORD",
-		"GFIREUI_BOOTSTRAP_ADMIN_FIRST_NAME",
-		"GFIREUI_BOOTSTRAP_ADMIN_LAST_NAME",
-		"GFIREUI_CONFIG",
+		"GFIREUI_BACKEND_SERVER_ADDR",
+		"GFIREUI_BACKEND_DATABASE_DSN",
+		"GFIREUI_BACKEND_AUTH_JWT_SECRET",
+		"GFIREUI_BACKEND_AUTH_TOKEN_TTL",
+		"GFIREUI_BACKEND_GFIRE_BASE_URL",
+		"GFIREUI_BACKEND_GFIRE_TOKEN",
+		"GFIREUI_BACKEND_BOOTSTRAP_ADMIN_EMAIL",
+		"GFIREUI_BACKEND_BOOTSTRAP_ADMIN_PASSWORD",
+		"GFIREUI_BACKEND_BOOTSTRAP_ADMIN_FIRST_NAME",
+		"GFIREUI_BACKEND_BOOTSTRAP_ADMIN_LAST_NAME",
+		"GFIREUI_BACKEND_CONFIG",
 	} {
 		t.Setenv(key, "")
 	}
