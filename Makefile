@@ -54,7 +54,7 @@ help:
 	@echo "  $(GREEN)build$(RESET)            Build local binary"
 	@echo "  $(GREEN)clean$(RESET)            Remove local build artifacts"
 	@echo "  $(GREEN)compose-down$(RESET)     Stop stack with docker compose"
-	@echo "  $(GREEN)compose-up$(RESET)       Start stack with docker compose (injects VERSION/COMMIT/BUILDDATE)"
+	@echo "  $(GREEN)compose-up$(RESET)       docker-build then compose up (uses image $(BINARY):$(VERSION))"
 	@echo "  $(GREEN)install$(RESET)          Install binary with ldflags"
 	@echo "  $(GREEN)server$(RESET)           Run serve locally (go run)"
 	@echo "  $(GREEN)migrate-up$(RESET)       Apply PostgreSQL migrations"
@@ -94,9 +94,8 @@ server:
 	@test -n "$(VERSION)" || { echo "Error: VERSION file empty or missing"; exit 1; }
 	go run -ldflags "$(LDFLAGS)" ./cmd/$(BINARY) serve
 
-compose-up:
-	VERSION=$(VERSION) COMMIT=$(COMMIT) BRANCH=$(BRANCH) BUILDDATE=$(BUILDDATE) \
-		docker compose up --build -d
+compose-up: docker-build
+	GFIREUI_BACKEND_IMAGE=$(BINARY):$(VERSION) docker compose up -d
 
 compose-down:
 	docker compose down

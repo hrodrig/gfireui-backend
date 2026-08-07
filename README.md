@@ -37,7 +37,7 @@
 
 This is the **Backend-for-Frontend** for [GFireUI](https://github.com/hrodrig/gfireui). Humans authenticate here. Permissions are decided here. Every peek at jobs, queues, recurring definitions, and servers goes **through** this service to [GFire](https://github.com/hrodrig/gfire). The browser never sees GFire’s URL or service token.
 
-> **Status: v0.1 API surface on `develop`.** Auth, users, audit, thin GFire proxy, ops summary, compose smoke. UI repo still scaffolding.
+> **Status: v0.1 API surface on `develop`.** Auth, users, audit, thin GFire proxy, ops summary. Compose uses pre-cooked `gfireui-backend:<VERSION>` (`make compose-up`).
 
 **Related tools (same maintainer):**
 - **[gfire](https://github.com/hrodrig/gfire)** — standalone background job service ([gfire.net](https://gfire.net))
@@ -182,7 +182,7 @@ make cover   # starts compose postgres; fails if total < COVER_MIN_PERCENT (defa
 **Compose (recommended):**
 
 ```sh
-# Auth-only smoke (no GFire): omit GFIREUI_BACKEND_GFIRE_* and use make compose-up
+# Cooks image gfireui-backend:<VERSION>, then starts postgres + migrate + backend
 make compose-up
 curl -sS http://127.0.0.1:8090/healthz
 
@@ -192,7 +192,7 @@ export GFIREUI_BACKEND_GFIRE_TOKEN=your-gfire-bearer   # omit if GFire auth disa
 make compose-up
 ```
 
-`make compose-up` injects `VERSION` / `COMMIT` / `BUILDDATE` into the image so the startup banner matches local `make build`.
+`make compose-up` = `make docker-build` (VERSION/COMMIT/BUILDDATE ldflags) then `docker compose up` using image `gfireui-backend:<VERSION>` (no in-compose Go rebuild).
 
 **Local binary:**
 
