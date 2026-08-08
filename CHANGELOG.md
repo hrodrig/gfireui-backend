@@ -7,6 +7,10 @@ This project adheres to [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
+### Changed
+
+- README documents the fail-closed release contract (gates before GoReleaser; links OCI/CI design).
+
 ## [0.1.0] - 2026-08-08
 
 ### Added

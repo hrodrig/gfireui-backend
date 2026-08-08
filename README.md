@@ -188,6 +188,14 @@ make release-check # full pre-tag gate (must be green before any release)
 
 CI runs the same quality bar on every PR and push to `develop`/`main`. **No release if cover (or fmt/gocyclo/test) is red.**
 
+### Release quality (fail-closed)
+
+- Tag `v*` only from `main` after merging `develop`.
+- Local bar: `make release-check` (lint, test, cover ≥80%, govulncheck, gocyclo, grype, docker-scan, `goreleaser check`).
+- Tag workflow re-runs `make release-check` **before** GoReleaser publishes binaries/GHCR (SBOM + cosign).
+- Red gate = no image, no GitHub Release assets.
+- Contract detail: [OCI / CI / release design](./docs/superpowers/specs/2026-08-08-gfireui-backend-oci-ci-release-design.md).
+
 **Compose (recommended):**
 
 ```sh
