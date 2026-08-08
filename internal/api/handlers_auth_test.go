@@ -7,6 +7,7 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"sort"
+	"sync"
 	"testing"
 	"time"
 
@@ -269,20 +270,33 @@ func TestMe(t *testing.T) {
 }
 
 type fakeUserStore struct {
+	mu           sync.RWMutex
 	usersByEmail map[string]*domain.User
 	usersByID    map[uuid.UUID]*domain.User
 }
 
+func cloneUser(u *domain.User) *domain.User {
+	if u == nil {
+		return nil
+	}
+	c := *u
+	return &c
+}
+
 func (f *fakeUserStore) GetUserByEmail(_ context.Context, email string) (*domain.User, error) {
+	f.mu.RLock()
+	defer f.mu.RUnlock()
 	if user, ok := f.usersByEmail[email]; ok {
-		return user, nil
+		return cloneUser(user), nil
 	}
 	return nil, store.ErrNotFound
 }
 
 func (f *fakeUserStore) GetUserByID(_ context.Context, id uuid.UUID) (*domain.User, error) {
+	f.mu.RLock()
+	defer f.mu.RUnlock()
 	if user, ok := f.usersByID[id]; ok {
-		return user, nil
+		return cloneUser(user), nil
 	}
 	return nil, store.ErrNotFound
 }
@@ -291,6 +305,8 @@ func (f *fakeUserStore) CreateUser(_ context.Context, user *domain.User) error {
 	if user == nil {
 		return nil
 	}
+	f.mu.Lock()
+	defer f.mu.Unlock()
 	if f.usersByEmail == nil {
 		f.usersByEmail = make(map[string]*domain.User)
 	}
@@ -300,15 +316,18 @@ func (f *fakeUserStore) CreateUser(_ context.Context, user *domain.User) error {
 	if user.ID == uuid.Nil {
 		user.ID = uuid.Must(uuid.NewV7())
 	}
-	f.usersByEmail[user.Email] = user
-	f.usersByID[user.ID] = user
+	stored := cloneUser(user)
+	f.usersByEmail[stored.Email] = stored
+	f.usersByID[stored.ID] = stored
 	return nil
 }
 
 func (f *fakeUserStore) ListUsers(_ context.Context) ([]domain.User, error) {
+	f.mu.RLock()
+	defer f.mu.RUnlock()
 	users := make([]domain.User, 0, len(f.usersByID))
 	for _, user := range f.usersByID {
-		users = append(users, *user)
+		users = append(users, *cloneUser(user))
 	}
 	sort.Slice(users, func(i, j int) bool {
 		if users[i].Email == users[j].Email {
@@ -323,6 +342,8 @@ func (f *fakeUserStore) UpdateUser(_ context.Context, user *domain.User) error {
 	if user == nil {
 		return nil
 	}
+	f.mu.Lock()
+	defer f.mu.Unlock()
 	if f.usersByEmail == nil {
 		f.usersByEmail = make(map[string]*domain.User)
 	}
@@ -332,17 +353,20 @@ func (f *fakeUserStore) UpdateUser(_ context.Context, user *domain.User) error {
 	if existing, ok := f.usersByID[user.ID]; ok {
 		delete(f.usersByEmail, existing.Email)
 	}
-	copyUser := *user
-	f.usersByID[user.ID] = &copyUser
-	f.usersByEmail[user.Email] = &copyUser
+	stored := cloneUser(user)
+	f.usersByID[stored.ID] = stored
+	f.usersByEmail[stored.Email] = stored
 	return nil
 }
 
 type fakeAuditWriter struct {
+	mu     sync.Mutex
 	events []*domain.AuditEvent
 }
 
 func (f *fakeAuditWriter) WriteAudit(_ context.Context, event *domain.AuditEvent) error {
+	f.mu.Lock()
+	defer f.mu.Unlock()
 	f.events = append(f.events, event)
 	return nil
 }

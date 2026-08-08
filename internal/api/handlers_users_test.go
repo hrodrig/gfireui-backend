@@ -14,7 +14,6 @@ import (
 )
 
 func TestUsersAdminAPI(t *testing.T) {
-	t.Parallel()
 
 	admin := testRoleUser(t, domain.RoleAdministrator)
 	other := &domain.User{
@@ -28,7 +27,6 @@ func TestUsersAdminAPI(t *testing.T) {
 	}
 
 	t.Run("list users", func(t *testing.T) {
-		t.Parallel()
 
 		store := &fakeUserStore{
 			usersByEmail: map[string]*domain.User{
@@ -62,7 +60,6 @@ func TestUsersAdminAPI(t *testing.T) {
 	})
 
 	t.Run("create user", func(t *testing.T) {
-		t.Parallel()
 
 		store := &fakeUserStore{
 			usersByEmail: map[string]*domain.User{
@@ -105,7 +102,6 @@ func TestUsersAdminAPI(t *testing.T) {
 	})
 
 	t.Run("get user", func(t *testing.T) {
-		t.Parallel()
 
 		store := &fakeUserStore{
 			usersByEmail: map[string]*domain.User{
@@ -137,7 +133,6 @@ func TestUsersAdminAPI(t *testing.T) {
 	})
 
 	t.Run("patch user", func(t *testing.T) {
-		t.Parallel()
 
 		target := *other
 		store := &fakeUserStore{
@@ -169,7 +164,6 @@ func TestUsersAdminAPI(t *testing.T) {
 	})
 
 	t.Run("cannot disable own account", func(t *testing.T) {
-		t.Parallel()
 
 		self := *admin
 		self.Enabled = true
@@ -189,7 +183,6 @@ func TestUsersAdminAPI(t *testing.T) {
 	})
 
 	t.Run("update password", func(t *testing.T) {
-		t.Parallel()
 
 		store := &fakeUserStore{
 			usersByEmail: map[string]*domain.User{
@@ -222,7 +215,6 @@ func TestUsersAdminAPI(t *testing.T) {
 }
 
 func TestUsersLookupErrors(t *testing.T) {
-	t.Parallel()
 
 	admin := testRoleUser(t, domain.RoleAdministrator)
 	store := &fakeUserStore{
@@ -231,7 +223,6 @@ func TestUsersLookupErrors(t *testing.T) {
 	}
 
 	t.Run("invalid uuid", func(t *testing.T) {
-		t.Parallel()
 		rec := performAdminRequest(t, store, admin, http.MethodGet, "/api/users/not-a-uuid", nil)
 		if rec.Code != http.StatusBadRequest {
 			t.Fatalf("status = %d", rec.Code)
@@ -239,7 +230,6 @@ func TestUsersLookupErrors(t *testing.T) {
 	})
 
 	t.Run("not found", func(t *testing.T) {
-		t.Parallel()
 		missing := uuid.MustParse("018f1f0f-0e3b-7c0c-9b77-1c0c0f0f0f77")
 		rec := performAdminRequest(t, store, admin, http.MethodGet, "/api/users/"+missing.String(), nil)
 		if rec.Code != http.StatusNotFound {
@@ -248,7 +238,6 @@ func TestUsersLookupErrors(t *testing.T) {
 	})
 
 	t.Run("create validation", func(t *testing.T) {
-		t.Parallel()
 		body := `{"first_name":"","last_name":"X","email":"x@example.com","role":"Operator","enabled":true,"password":"secret-password"}`
 		rec := performAdminRequest(t, store, admin, http.MethodPost, "/api/users", bytes.NewBufferString(body))
 		if rec.Code != http.StatusBadRequest {
@@ -257,7 +246,6 @@ func TestUsersLookupErrors(t *testing.T) {
 	})
 
 	t.Run("password required", func(t *testing.T) {
-		t.Parallel()
 		otherID := uuid.MustParse("018f1f0f-0e3b-7c0c-9b77-1c0c0f0f0f21")
 		store := &fakeUserStore{
 			usersByEmail: map[string]*domain.User{admin.Email: admin},
@@ -282,7 +270,6 @@ func TestUsersLookupErrors(t *testing.T) {
 }
 
 func TestRBACMatrix(t *testing.T) {
-	t.Parallel()
 
 	cases := []struct {
 		name       string
@@ -304,7 +291,6 @@ func TestRBACMatrix(t *testing.T) {
 
 	for _, tt := range cases {
 		t.Run(tt.name, func(t *testing.T) {
-			t.Parallel()
 
 			user := testRoleUser(t, tt.role)
 			rec := performAdminRequest(t, &fakeUserStore{
