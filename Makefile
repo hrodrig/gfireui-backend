@@ -189,9 +189,11 @@ tools:
 govulncheck:
 	go run golang.org/x/vuln/cmd/govulncheck@latest ./...
 
+# Match gfire: measure production code only (table-driven tests often exceed 15).
 gocyclo:
 	@command -v gocyclo >/dev/null 2>&1 || go install github.com/fzipp/gocyclo/cmd/gocyclo@latest
-	gocyclo -over 15 .
+	@files=$$(find . -name '*.go' -not -name '*_test.go' -not -path './.git/*' -not -path './bin/*' -not -path './dist/*'); \
+	gocyclo -over 15 $$files
 
 # Dir scan: exclude local build outputs — binaries embed buildinfo and skew CVE noise.
 GRYPE_DIR_EXCLUDES := --exclude './dist/**' --exclude './$(BINARY)' --exclude './bin/**'

@@ -145,11 +145,7 @@ Add “Release packaging” table B-040…B-045 (B-043 in progress).
 - Modify: `CHANGELOG.md` — Unreleased bullets for this band
 
 - [x] **Step 1: Edit docs**
-- [ ] **Step 2: Commit**
-
-```
-docs: document GHCR release and CI quality gates
-```
+- [x] **Step 2: Commit** — `a2d6954` (pushed `develop`)
 
 ---
 

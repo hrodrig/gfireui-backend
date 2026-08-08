@@ -10,6 +10,7 @@ import (
 	"time"
 
 	"github.com/google/uuid"
+	"github.com/jackc/pgx/v5/pgxpool"
 )
 
 func TestRunServeWithDatabaseAndBootstrapSkip(t *testing.T) {
@@ -67,11 +68,40 @@ func TestRunServeWithDatabaseAndBootstrapSkip(t *testing.T) {
 	}
 }
 
+func ensureUsersTable(t *testing.T, dsn string) {
+	t.Helper()
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	defer cancel()
+	pool, err := pgxpool.New(ctx, dsn)
+	if err != nil {
+		t.Fatalf("pgxpool: %v", err)
+	}
+	defer pool.Close()
+	_, err = pool.Exec(ctx, `
+		CREATE TABLE IF NOT EXISTS users (
+			id UUID PRIMARY KEY,
+			first_name TEXT NOT NULL,
+			last_name TEXT NOT NULL,
+			email TEXT NOT NULL UNIQUE,
+			role TEXT NOT NULL,
+			enabled BOOLEAN NOT NULL DEFAULT true,
+			password_hash TEXT NOT NULL,
+			created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
+			updated_at TIMESTAMPTZ NOT NULL DEFAULT now()
+		)
+	`)
+	if err != nil {
+		t.Fatalf("ensure users table: %v", err)
+	}
+}
+
 func TestRunUserCreatePersists(t *testing.T) {
 	dsn := os.Getenv("GFIREUI_BACKEND_TEST_DSN")
 	if dsn == "" {
 		t.Skip("GFIREUI_BACKEND_TEST_DSN unset")
 	}
+
+	ensureUsersTable(t, dsn)
 
 	clearGFireUIEnv(t)
 	t.Setenv("GFIREUI_BACKEND_AUTH_JWT_SECRET", "test-secret")
