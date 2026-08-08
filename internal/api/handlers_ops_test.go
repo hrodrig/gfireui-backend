@@ -40,20 +40,27 @@ func TestOpsSummaryAccessAndAggregation(t *testing.T) {
 			}
 
 			var body struct {
-				JobsByState map[string]int       `json:"jobs_by_state"`
-				Queues      []gfire.QueueSummary `json:"queues"`
-				GeneratedAt time.Time            `json:"generated_at"`
+				JobsByState    map[string]int       `json:"jobs_by_state"`
+				Queues         []gfire.QueueSummary `json:"queues"`
+				ServersCount   int                  `json:"servers_count"`
+				RecurringCount int                  `json:"recurring_count"`
+				Versions       []struct {
+					Name    string `json:"name"`
+					Version string `json:"version"`
+					URL     string `json:"url"`
+				} `json:"versions"`
+				GeneratedAt time.Time `json:"generated_at"`
 			}
 			if err := json.NewDecoder(rec.Body).Decode(&body); err != nil {
 				t.Fatalf("decode ops summary: %v", err)
 			}
 
 			wantJobs := map[string]int{
-				"pending":    2,
-				"processing": 1,
-				"succeeded":  3,
-				"failed":     4,
-				"dead":       0,
+				"Enqueued":   2,
+				"Processing": 1,
+				"Succeeded":  3,
+				"Failed":     4,
+				"Dead":       0,
 			}
 			for state, want := range wantJobs {
 				if got := body.JobsByState[state]; got != want {
@@ -65,6 +72,18 @@ func TestOpsSummaryAccessAndAggregation(t *testing.T) {
 			}
 			if body.Queues[0].Name != "default" || body.Queues[0].Depth != 5 {
 				t.Fatalf("first queue = %#v", body.Queues[0])
+			}
+			if body.ServersCount != 3 {
+				t.Fatalf("servers_count = %d, want 3", body.ServersCount)
+			}
+			if body.RecurringCount != 1 {
+				t.Fatalf("recurring_count = %d, want 1", body.RecurringCount)
+			}
+			if len(body.Versions) < 2 {
+				t.Fatalf("versions = %d, want >= 2", len(body.Versions))
+			}
+			if body.Versions[1].Name != "gfire" || body.Versions[1].Version != "1.0.1" {
+				t.Fatalf("gfire version = %#v", body.Versions[1])
 			}
 			if body.GeneratedAt.IsZero() {
 				t.Fatal("generated_at should be set")
@@ -101,11 +120,11 @@ func TestOpsSummaryBestEffort(t *testing.T) {
 		t.Fatalf("decode ops summary: %v", err)
 	}
 
-	if got := body.JobsByState["pending"]; got != 2 {
-		t.Fatalf("pending jobs = %d, want 2", got)
+	if got := body.JobsByState["Enqueued"]; got != 2 {
+		t.Fatalf("Enqueued jobs = %d, want 2", got)
 	}
-	if got := body.JobsByState["failed"]; got != 0 {
-		t.Fatalf("failed jobs = %d, want 0 after upstream error", got)
+	if got := body.JobsByState["Failed"]; got != 0 {
+		t.Fatalf("Failed jobs = %d, want 0 after upstream error", got)
 	}
 	if len(body.Queues) != 2 {
 		t.Fatalf("queues = %d, want 2", len(body.Queues))
@@ -141,36 +160,45 @@ func performOpsRequest(t *testing.T, actor *domain.User, upstreamURL string, aud
 	return rec
 }
 
-func newOpsSummaryUpstream(t *testing.T, failDead bool) *httptest.Server {
+func newOpsSummaryUpstream(t *testing.T, failFailed bool) *httptest.Server {
 	t.Helper()
 
 	return httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		switch r.URL.Path {
+		case "/healthz":
+			w.Header().Set("Content-Type", "application/json")
+			_, _ = w.Write([]byte(`{"status":"ok","version":"1.0.1","commit":"abc1234"}`))
 		case "/v1/queues":
 			w.Header().Set("Content-Type", "application/json")
 			_, _ = w.Write([]byte(`{"queues":[{"name":"default","depth":5},{"name":"bulk","depth":2}]}`))
+		case "/v1/servers":
+			w.Header().Set("Content-Type", "application/json")
+			_, _ = w.Write([]byte(`{"servers":[{"id":"gfire-1"},{"id":"gfire-2"},{"id":"gfire-3"}]}`))
+		case "/v1/recurring":
+			w.Header().Set("Content-Type", "application/json")
+			_, _ = w.Write([]byte(`{"recurring":[{"id":"nightly"}]}`))
 		case "/v1/jobs":
 			switch r.URL.Query().Get("state") {
-			case "pending":
+			case "Enqueued":
 				w.Header().Set("Content-Type", "application/json")
 				_, _ = w.Write([]byte(`{"jobs":[{"id":"1"},{"id":"2"}]}`))
-			case "processing":
+			case "Processing":
 				w.Header().Set("Content-Type", "application/json")
 				_, _ = w.Write([]byte(`{"total":1}`))
-			case "succeeded":
+			case "Succeeded":
 				w.Header().Set("Content-Type", "application/json")
 				_, _ = w.Write([]byte(`{"data":[{"id":"1"},{"id":"2"},{"id":"3"}]}`))
-			case "failed":
-				if failDead {
+			case "Failed":
+				if failFailed {
 					w.WriteHeader(http.StatusBadGateway)
 					_, _ = w.Write([]byte(`{"error":"temporarily unavailable"}`))
 					return
 				}
 				w.Header().Set("Content-Type", "application/json")
 				_, _ = w.Write([]byte(`{"count":4}`))
-			case "dead":
+			case "Dead", "Scheduled", "Cancelled", "Deleted", "Awaiting":
 				w.Header().Set("Content-Type", "application/json")
-				_, _ = w.Write([]byte(`[]`))
+				_, _ = w.Write([]byte(`{"jobs":[]}`))
 			default:
 				w.WriteHeader(http.StatusBadRequest)
 				_, _ = w.Write([]byte(`{"error":"unexpected state"}`))

@@ -10,7 +10,7 @@ Go BFF for [GFireUI](https://github.com/hrodrig/gfireui). Owns human auth, RBAC,
 
 | Method | Path | Auth | Roles | Notes |
 | ------ | ---- | ---- | ----- | ----- |
-| GET | `/healthz` | no | — | `{"status":"ok"}` |
+| GET | `/healthz` | no | — | `{"status":"ok","version":"...","commit":"..."}` (ldflags; may be empty in local builds) |
 | POST | `/api/auth/login` | no | — | `{email,password}` → `{token,user}` |
 | GET | `/api/auth/me` | JWT | any enabled | current user |
 | GET/POST | `/api/users` | JWT | Administrator | list / create |
@@ -18,7 +18,7 @@ Go BFF for [GFireUI](https://github.com/hrodrig/gfireui). Owns human auth, RBAC,
 | POST | `/api/users/{id}/password` | JWT | Administrator | set password |
 | GET | `/api/audit` | JWT | Administrator, Auditor | paginated audit |
 | * | `/api/gfire/{path...}` | JWT | see RBAC | thin proxy to GFire |
-| GET | `/api/ops/summary` | JWT | Admin, Operator, Auditor | chart snapshot |
+| GET | `/api/ops/summary` | JWT | Admin, Operator, Auditor | chart snapshot: canonical state counts, `servers_count`, `recurring_count`, `queues`, `versions[]` (BFF + upstream gfire), `generated_at` |
 
 ### Proxy RBAC
 
@@ -80,7 +80,7 @@ CI (`.github/workflows/ci.yml`) on every PR and push to `develop`/`main` fail-cl
 | Local/CI image | `Dockerfile` → distroless `static-debian13:nonroot`, listen **8090**, `CMD ["serve"]` |
 | Release image | GoReleaser `dockers_v2` + `Dockerfile.release`; **`ghcr.io/hrodrig/gfireui-backend`** tags `vX.Y.Z` + `latest` |
 | Arches | **linux/amd64** and **linux/arm64** |
-| Health | `GET /healthz` → `{"status":"ok"}` (no auth) |
+| Health | `GET /healthz` → `status` + optional `version`/`commit` (no auth) |
 | Supply chain | syft SBOM + cosign keyless on release (`id-token: write`) |
 | Smoke | `make docker-smoke` curls `/healthz` (process smoke; no Postgres required) |
 

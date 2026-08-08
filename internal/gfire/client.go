@@ -111,7 +111,7 @@ func (c *Client) CountJobsByState(ctx context.Context, state string) (int, error
 		return 0, errors.New("job state is required")
 	}
 
-	resp, err := c.Do(ctx, http.MethodGet, "/v1/jobs?state="+url.QueryEscape(state), nil)
+	resp, err := c.Do(ctx, http.MethodGet, "/v1/jobs?state="+url.QueryEscape(state)+"&limit=1000", nil)
 	if err != nil {
 		return 0, err
 	}
@@ -122,6 +122,58 @@ func (c *Client) CountJobsByState(ctx context.Context, state string) (int, error
 	}
 
 	return decodeJobCount(resp.Body)
+}
+
+// CountServers returns how many peer servers GFire reports.
+func (c *Client) CountServers(ctx context.Context) (int, error) {
+	resp, err := c.Do(ctx, http.MethodGet, "/v1/servers", nil)
+	if err != nil {
+		return 0, err
+	}
+	defer resp.Body.Close()
+	if resp.StatusCode < http.StatusOK || resp.StatusCode >= http.StatusMultipleChoices {
+		return 0, fmt.Errorf("gfire list servers failed: status %d", resp.StatusCode)
+	}
+	return decodeNamedListCount(resp.Body, "servers")
+}
+
+// CountRecurring returns how many recurring job definitions GFire reports.
+func (c *Client) CountRecurring(ctx context.Context) (int, error) {
+	resp, err := c.Do(ctx, http.MethodGet, "/v1/recurring", nil)
+	if err != nil {
+		return 0, err
+	}
+	defer resp.Body.Close()
+	if resp.StatusCode < http.StatusOK || resp.StatusCode >= http.StatusMultipleChoices {
+		return 0, fmt.Errorf("gfire list recurring failed: status %d", resp.StatusCode)
+	}
+	return decodeNamedListCount(resp.Body, "recurring", "jobs", "items", "data")
+}
+
+// VersionInfo is release metadata from GFire GET /healthz (when present).
+type VersionInfo struct {
+	Version string `json:"version"`
+	Commit  string `json:"commit"`
+}
+
+// FetchVersion reads version/commit from GFire /healthz (best-effort).
+func (c *Client) FetchVersion(ctx context.Context) (VersionInfo, error) {
+	resp, err := c.Do(ctx, http.MethodGet, "/healthz", nil)
+	if err != nil {
+		return VersionInfo{}, err
+	}
+	defer resp.Body.Close()
+	if resp.StatusCode < http.StatusOK || resp.StatusCode >= http.StatusMultipleChoices {
+		return VersionInfo{}, fmt.Errorf("gfire healthz failed: status %d", resp.StatusCode)
+	}
+	var body struct {
+		Version string `json:"version"`
+		Commit  string `json:"commit"`
+	}
+	if err := json.NewDecoder(resp.Body).Decode(&body); err != nil {
+		return VersionInfo{}, fmt.Errorf("decode gfire healthz: %w", err)
+	}
+	return VersionInfo{Version: body.Version, Commit: body.Commit}, nil
 }
 
 func (c *Client) resolveURL(requestPath string) (*url.URL, error) {
@@ -294,4 +346,50 @@ func firstInt(values ...*int) int {
 		}
 	}
 	return 0
+}
+
+func decodeNamedListCount(body io.Reader, keys ...string) (int, error) {
+	payload, err := io.ReadAll(body)
+	if err != nil {
+		return 0, fmt.Errorf("read gfire list response: %w", err)
+	}
+	payload = bytes.TrimSpace(payload)
+	if len(payload) == 0 {
+		return 0, errors.New("gfire list response is empty")
+	}
+	if payload[0] == '[' {
+		var items []json.RawMessage
+		if err := json.Unmarshal(payload, &items); err != nil {
+			return 0, fmt.Errorf("decode gfire list response: %w", err)
+		}
+		return len(items), nil
+	}
+	var wrapper map[string]json.RawMessage
+	if err := json.Unmarshal(payload, &wrapper); err != nil {
+		return 0, fmt.Errorf("decode gfire list response: %w", err)
+	}
+	for _, key := range keys {
+		raw, ok := wrapper[key]
+		if !ok {
+			continue
+		}
+		var items []json.RawMessage
+		if err := json.Unmarshal(raw, &items); err != nil {
+			continue
+		}
+		return len(items), nil
+	}
+	if raw, ok := wrapper["total"]; ok {
+		var total int
+		if err := json.Unmarshal(raw, &total); err == nil {
+			return total, nil
+		}
+	}
+	if raw, ok := wrapper["count"]; ok {
+		var count int
+		if err := json.Unmarshal(raw, &count); err == nil {
+			return count, nil
+		}
+	}
+	return 0, nil
 }

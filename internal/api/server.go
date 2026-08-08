@@ -10,6 +10,7 @@ import (
 	"github.com/google/uuid"
 	"github.com/hrodrig/gfireui-backend/internal/domain"
 	"github.com/hrodrig/gfireui-backend/internal/gfire"
+	"github.com/hrodrig/gfireui-backend/internal/version"
 )
 
 const defaultTokenTTL = 24 * time.Hour
@@ -38,6 +39,9 @@ type GFireClient interface {
 	Do(ctx context.Context, method, path string, body io.Reader) (*http.Response, error)
 	ListQueues(ctx context.Context) ([]gfire.QueueSummary, error)
 	CountJobsByState(ctx context.Context, state string) (int, error)
+	CountServers(ctx context.Context) (int, error)
+	CountRecurring(ctx context.Context) (int, error)
+	FetchVersion(ctx context.Context) (gfire.VersionInfo, error)
 }
 
 // Deps are the runtime dependencies required by the HTTP server.
@@ -85,7 +89,11 @@ func NewServer(deps Deps) http.Handler {
 
 func (s *Server) handleHealthz(w http.ResponseWriter, _ *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
-	_ = json.NewEncoder(w).Encode(map[string]string{"status": "ok"})
+	_ = json.NewEncoder(w).Encode(map[string]string{
+		"status":  "ok",
+		"version": version.Version,
+		"commit":  version.Commit,
+	})
 }
 
 type noopAuditWriter struct{}
