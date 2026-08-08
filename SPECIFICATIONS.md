@@ -62,6 +62,28 @@ Family convention: `GFIRE_*` (engine), `GFIREUI_BACKEND_*` (this BFF), `PUBLIC_G
 
 `make cover` starts compose Postgres, runs `go test ./...` with `GFIREUI_BACKEND_TEST_DSN`, and fails if total statement coverage is below `COVER_MIN_PERCENT` (default **80**, same floor as gghstats).
 
+CI (`.github/workflows/ci.yml`) on every PR and push to `develop`/`main` fail-closed on:
+
+1. `gofmt -s`  
+2. `go vet`  
+3. `gocyclo -over 15`  
+4. `go test -race`  
+5. cover ≥ **80%** (Postgres service)  
+6. `docker build` of `Dockerfile` (no push)
+
+`make release-check` (lint, test, cover, security, docker-scan, `goreleaser check`) must pass before tagging. The release workflow re-runs those gates and **does not publish** if they fail.
+
+## OCI image
+
+| Item | Contract |
+|------|----------|
+| Local/CI image | `Dockerfile` → distroless `static-debian13:nonroot`, listen **8090**, `CMD ["serve"]` |
+| Release image | GoReleaser `dockers_v2` + `Dockerfile.release`; **`ghcr.io/hrodrig/gfireui-backend`** tags `vX.Y.Z` + `latest` |
+| Arches | **linux/amd64** and **linux/arm64** |
+| Health | `GET /healthz` → `{"status":"ok"}` (no auth) |
+| Supply chain | syft SBOM + cosign keyless on release (`id-token: write`) |
+| Smoke | `make docker-smoke` curls `/healthz` (process smoke; no Postgres required) |
+
 ## Non-goals (v0.1)
 
 - Embedding in `gfire` binary  

@@ -7,10 +7,11 @@
 [![Version](https://img.shields.io/badge/version-0.1.0-blue)](./VERSION)
 [![Go](https://img.shields.io/badge/Go-service-00ADD8?logo=go)](https://go.dev/)
 [![License](https://img.shields.io/badge/license-MIT-green)](./LICENSE)
-[![Status](https://img.shields.io/badge/status-design-yellow)](#current-status)
+[![Status](https://img.shields.io/badge/status-v0.1.0-brightgreen)](#current-status)
+[![GHCR](https://img.shields.io/badge/image-ghcr.io%2Fhrodrig%2Fgfireui--backend-2496ED?logo=github)](https://github.com/hrodrig/gfireui-backend/pkgs/container/gfireui-backend)
 [![Companion](https://img.shields.io/badge/UI-gfireui-FF3E00)](https://github.com/hrodrig/gfireui)
 
-**Repo:** [github.com/hrodrig/gfireui-backend](https://github.com/hrodrig/gfireui-backend) · **UI:** [gfireui](https://github.com/hrodrig/gfireui) · **Engine:** [gfire](https://github.com/hrodrig/gfire) · **Design:** [platform design](./docs/superpowers/specs/2026-08-06-gfireui-platform-design.md) · **Site:** [gfire.net](https://gfire.net)
+**Repo:** [github.com/hrodrig/gfireui-backend](https://github.com/hrodrig/gfireui-backend) · **UI:** [gfireui](https://github.com/hrodrig/gfireui) · **Engine:** [gfire](https://github.com/hrodrig/gfire) · **Design:** [platform design](./docs/superpowers/specs/2026-08-06-gfireui-platform-design.md) · **Security:** [SECURITY.md](./SECURITY.md) · **Site:** [gfire.net](https://gfire.net)
 
 <p align="center">
   <img src="docs/assets/gfireui-backend-hero.png" alt="GFireUI Backend — BFF, auth, RBAC, audit" width="100%" />
@@ -37,7 +38,7 @@
 
 This is the **Backend-for-Frontend** for [GFireUI](https://github.com/hrodrig/gfireui). Humans authenticate here. Permissions are decided here. Every peek at jobs, queues, recurring definitions, and servers goes **through** this service to [GFire](https://github.com/hrodrig/gfire). The browser never sees GFire’s URL or service token.
 
-> **Status: v0.1 API surface on `develop`.** Auth, users, audit, thin GFire proxy, ops summary. Compose uses pre-cooked `gfireui-backend:<VERSION>` (`make compose-up`).
+> **Status: v0.1.0 packaging ready.** Auth, users, audit, thin GFire proxy, ops summary. CI fail-closed (fmt/vet/gocyclo/test/cover≥80%). Production image target: `ghcr.io/hrodrig/gfireui-backend` via GoReleaser on tag `v*`.
 
 **Related tools (same maintainer):**
 - **[gfire](https://github.com/hrodrig/gfire)** — standalone background job service ([gfire.net](https://gfire.net))
@@ -141,8 +142,11 @@ Signing key + GFire Bearer: **env/config only** in v0.1.
 | Migrations + auth + users + audit | ✅ |
 | GFire proxy + RBAC + ops summary | ✅ |
 | Docker Compose (app stack) | ✅ |
+| CI (fmt/vet/gocyclo/test/cover≥80%/docker) | ✅ |
+| GoReleaser + release.yml (GHCR multi-arch, SBOM, cosign) | ✅ |
+| SECURITY.md | ✅ |
 | Kubernetes / selfhosted sibling | ⬜ post-v0.1 (separate repo) |
-| Merge to `main` / first tag | ⬜ when E2E with GFireUI is usable |
+| Merge to `main` / first tag `v0.1.0` | ⬜ when CI green on `develop` |
 
 [↑ Back to top](#readme-top)
 
@@ -174,10 +178,15 @@ gfireui-backend/
 **Quality gate (gghstats-style Makefile):**
 
 ```sh
-make lint
+make lint          # gofmt -s + go vet
+make gocyclo       # complexity ≤ 15
 make test
-make cover   # starts compose postgres; fails if total < COVER_MIN_PERCENT (default 80)
+make cover         # Postgres via compose; fail if total < COVER_MIN_PERCENT (default 80)
+make docker-smoke  # local image; curl /healthz
+make release-check # full pre-tag gate (must be green before any release)
 ```
+
+CI runs the same quality bar on every PR and push to `develop`/`main`. **No release if cover (or fmt/gocyclo/test) is red.**
 
 **Compose (recommended):**
 
@@ -209,7 +218,14 @@ PostgreSQL (`gfireui` database) required for auth/users/audit. Reachable **[gfir
 
 **Images:** `Dockerfile` = compile-in-Docker for local/CI. `Dockerfile.release` = distroless runtime for GoReleaser (binary already built). Same split as sibling Go repos.
 
-**Note:** Helm/k8s packaging is intentionally out of this repo — planned for a future `*-selfhosted` sibling.
+```sh
+# After tag v0.1.0 publishes:
+docker pull ghcr.io/hrodrig/gfireui-backend:v0.1.0
+```
+
+Ops packaging: [gfire-selfhosted](https://github.com/hrodrig/gfire-selfhosted) (`GFIREUI_BACKEND_VERSION`).
+
+**Note:** Helm/k8s packaging is intentionally out of this repo — owned by the selfhosted sibling.
 
 [↑ Back to top](#readme-top)
 
@@ -218,10 +234,13 @@ PostgreSQL (`gfireui` database) required for auth/users/audit. Reachable **[gfir
 | Document | Role |
 | -------- | ---- |
 | [Platform design](./docs/superpowers/specs/2026-08-06-gfireui-platform-design.md) | Approved architecture & API intent |
+| [OCI / CI / release](./docs/superpowers/specs/2026-08-08-gfireui-backend-oci-ci-release-design.md) | GoReleaser, GHCR, fail-closed gates |
+| [SPECIFICATIONS.md](./SPECIFICATIONS.md) | Behavior + image/quality contract |
+| [ROADMAP.md](./ROADMAP.md) | Band status (B-040…) |
+| [SECURITY.md](./SECURITY.md) | Vulnerability reporting (private advisories) |
+| [CHANGELOG.md](./CHANGELOG.md) | Shipped notes |
 | [gfireui](https://github.com/hrodrig/gfireui) | Console frontend |
 | [GFire SPEC](https://github.com/hrodrig/gfire/blob/main/SPECIFICATIONS.md) | Engine behavior |
-
-See also `SPECIFICATIONS.md` (behavior contract) and `ROADMAP.md`.
 
 [↑ Back to top](#readme-top)
 

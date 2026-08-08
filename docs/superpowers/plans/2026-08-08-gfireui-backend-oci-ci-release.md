@@ -114,13 +114,9 @@ Add “Release packaging” table B-040…B-045 (B-043 in progress).
 
 - [x] **Step 1: Write `ci.yml`**
 
-- [ ] **Step 2: Push to `develop` and confirm Actions green** (after user approves commit)
+- [ ] **Step 2: Push to `develop` and confirm Actions green** (after user approves push)
 
-- [ ] **Step 3: Commit**
-
-```
-ci: add fmt vet gocyclo test cover and docker gates
-```
+- [x] **Step 3: Commit** — `635be73`
 
 ---
 
@@ -136,11 +132,7 @@ ci: add fmt vet gocyclo test cover and docker gates
 
 - [x] **Step 1: Write `release.yml`** — `make release-check` before GoReleaser
 
-- [ ] **Step 2: Commit**
-
-```
-ci: add release workflow with gates before GoReleaser
-```
+- [x] **Step 2: Commit** — `3b051b9`
 
 ---
 
@@ -152,7 +144,7 @@ ci: add release workflow with gates before GoReleaser
 - Modify: `ROADMAP.md` — mark B-040…B-044 Done when landed; B-045 Pending until tag
 - Modify: `CHANGELOG.md` — Unreleased bullets for this band
 
-- [ ] **Step 1: Edit docs**
+- [x] **Step 1: Edit docs**
 - [ ] **Step 2: Commit**
 
 ```
