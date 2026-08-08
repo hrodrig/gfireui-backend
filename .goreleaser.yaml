@@ -99,6 +99,9 @@ dockers_v2:
     sbom: true
     ids:
       - gfireui-backend
+    # Dockerfile.release COPY migrations — must be in GoReleaser build context.
+    extra_files:
+      - migrations
     images:
       - ghcr.io/hrodrig/gfireui-backend
     tags:
