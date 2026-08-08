@@ -42,7 +42,7 @@ YELLOW := \033[0;33m
 RESET  := \033[0m
 
 .PHONY: build clean compose-down compose-up cover docker-build docker-build-amd64 \
-	docker-run docker-scan gocyclo govulncheck grype help install lint lint-fix \
+	docker-run docker-scan docker-smoke gocyclo govulncheck grype help install lint lint-fix \
 	migrate-down migrate-up release release-check security server snapshot test tools
 
 help:
@@ -73,6 +73,7 @@ help:
 	@echo "  $(GREEN)docker-build$(RESET)       Build image $(BINARY):$(VERSION) (optional: DOCKER_PLATFORM=linux/amd64)"
 	@echo "  $(GREEN)docker-build-amd64$(RESET) Same, forced linux/amd64"
 	@echo "  $(GREEN)docker-run$(RESET)         Run local Docker image on :8090"
+	@echo "  $(GREEN)docker-smoke$(RESET)       Build image; curl /healthz (no Postgres required)"
 	@echo "  $(GREEN)docker-scan$(RESET)        Build and scan image with Grype"
 	@echo ""
 	@echo "$(YELLOW)Release:$(RESET)"
@@ -165,6 +166,21 @@ docker-run:
 		-e GFIREUI_BACKEND_SERVER_ADDR=:8090 \
 		-e GFIREUI_BACKEND_AUTH_JWT_SECRET=dev-only-change-me \
 		$(BINARY):$(VERSION)
+
+# Smoke: process listens and /healthz answers without DSN (API routes need Postgres separately).
+docker-smoke: docker-build
+	$(check-docker)
+	@cid=$$(docker run -d -p 18090:8090 \
+		-e GFIREUI_BACKEND_SERVER_ADDR=:8090 \
+		-e GFIREUI_BACKEND_AUTH_JWT_SECRET=dev-only-change-me \
+		$(BINARY):$(VERSION)) && \
+		trap 'docker rm -f $$cid >/dev/null 2>&1' EXIT && \
+		for i in 1 2 3 4 5 6 7 8 9 10; do \
+			curl -sfS http://127.0.0.1:18090/healthz | grep -q '"status":"ok"' && break; \
+			sleep 1; \
+			if [ $$i -eq 10 ]; then echo "docker-smoke: /healthz not ready"; docker logs $$cid; exit 1; fi; \
+		done && \
+		echo "docker-smoke: OK (HTTP 200 /healthz)"
 
 tools:
 	go install golang.org/x/vuln/cmd/govulncheck@latest

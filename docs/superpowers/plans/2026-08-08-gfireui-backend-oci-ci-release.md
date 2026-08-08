@@ -80,11 +80,7 @@ Add “Release packaging” table B-040…B-045 (B-043 in progress).
 
 - [ ] **Step 3: Optional snapshot dry-run** (if Docker/QEMU available) — defer to release-check window
 
-- [ ] **Step 4: Commit**
-
-```
-build: add GoReleaser config for multi-arch GHCR
-```
+- [x] **Step 4: Commit** — `98b2023`
 
 ---
 
@@ -98,24 +94,9 @@ build: add GoReleaser config for multi-arch GHCR
 - Consumes: `make docker-build` → `gfireui-backend:$(VERSION)`
 - Produces: `make docker-smoke` curls `/healthz`
 
-- [ ] **Step 1: Add `docker-smoke` target**
+- [x] **Step 1: Add `docker-smoke` target** — no DSN; `/healthz` only
 
-Pattern:
-
-1. Ensure image exists (`docker-build` dependency or require prior build)
-2. `docker run -d --rm -p 18090:8090` with minimal env (`GFIREUI_BACKEND_SERVER_ADDR=:8090`, JWT secret dummy — confirm serve starts without full Postgres if healthz is process-only; if serve requires DB, document and use compose postgres or skip DB-dependent start)
-
-**Important:** Inspect whether `serve` requires Postgres before listen. If yes, smoke must either:
-
-- hit a binary that serves `/healthz` before DB, or  
-- run against `docker compose` stack briefly, or  
-- use `docker run` with linked postgres
-
-Prefer: if `/healthz` is available without DB, keep smoke simple. If not, smoke via compose `gfireui-backend` + `curl`.
-
-- [ ] **Step 2: Run smoke locally**
-
-Expected: HTTP 200 + `{"status":"ok"}` (or equivalent)
+- [x] **Step 2: Run smoke locally** — OK
 
 - [ ] **Step 3: Commit**
 
