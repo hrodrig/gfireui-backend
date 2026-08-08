@@ -7,6 +7,13 @@ This project adheres to [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
+## [0.1.1] - 2026-08-08
+
+### Added
+
+- `GET /api/ops/summary` expands to canonical GFire states, `servers_count`, `recurring_count`, and `versions[]` (BFF + upstream gfire from `/healthz`).
+- `GET /healthz` includes `version` and `commit` (ldflags).
+
 ### Changed
 
 - README documents the fail-closed release contract (gates before GoReleaser; links OCI/CI design).

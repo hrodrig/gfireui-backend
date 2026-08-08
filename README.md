@@ -4,10 +4,10 @@
 
 **🔐** _Users, roles, audit, and a thin door into GFire._
 
-[![Version](https://img.shields.io/badge/version-0.1.0-blue)](./VERSION)
+[![Version](https://img.shields.io/badge/version-0.1.1-blue)](./VERSION)
 [![Go](https://img.shields.io/badge/Go-service-00ADD8?logo=go)](https://go.dev/)
 [![License](https://img.shields.io/badge/license-MIT-green)](./LICENSE)
-[![Status](https://img.shields.io/badge/status-v0.1.0-brightgreen)](#current-status)
+[![Status](https://img.shields.io/badge/status-v0.1.1-brightgreen)](#current-status)
 [![GHCR](https://img.shields.io/badge/image-ghcr.io%2Fhrodrig%2Fgfireui--backend-2496ED?logo=github)](https://github.com/hrodrig/gfireui-backend/pkgs/container/gfireui-backend)
 [![Companion](https://img.shields.io/badge/UI-gfireui-FF3E00)](https://github.com/hrodrig/gfireui)
 
@@ -38,7 +38,7 @@
 
 This is the **Backend-for-Frontend** for [GFireUI](https://github.com/hrodrig/gfireui). Humans authenticate here. Permissions are decided here. Every peek at jobs, queues, recurring definitions, and servers goes **through** this service to [GFire](https://github.com/hrodrig/gfire). The browser never sees GFire’s URL or service token.
 
-> **Status: v0.1.0 packaging ready.** Auth, users, audit, thin GFire proxy, ops summary. CI fail-closed (fmt/vet/gocyclo/test/cover≥80%). Production image target: `ghcr.io/hrodrig/gfireui-backend` via GoReleaser on tag `v*`.
+> **Status: v0.1.1.** Auth, users, audit, thin GFire proxy, expanded ops summary + version footprint. CI fail-closed. Image: `ghcr.io/hrodrig/gfireui-backend` via GoReleaser on tag `v*`.
 
 **Related tools (same maintainer):**
 - **[gfire](https://github.com/hrodrig/gfire)** — standalone background job service ([gfire.net](https://gfire.net))
