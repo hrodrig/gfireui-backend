@@ -34,7 +34,7 @@ Plan: [docs/superpowers/plans/2026-08-08-gfireui-backend-oci-ci-release.md](./do
 | B-042 | release.yml gates-then-GoReleaser | ✅ |
 | B-043 | SECURITY + CHANGELOG + docs sync | ✅ |
 | B-044 | docker-smoke `/healthz` | ✅ |
-| B-045 | `main` + tag `v0.1.0` when CI green | Pending |
+| B-045 | `main` + tag `v0.1.0` when CI green | ✅ |
 
 **Release rule:** no tag / no GHCR publish if fmt, vet, gocyclo, test, or cover (&lt; 80%) is red.
 

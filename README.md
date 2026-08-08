@@ -146,7 +146,7 @@ Signing key + GFire Bearer: **env/config only** in v0.1.
 | GoReleaser + release.yml (GHCR multi-arch, SBOM, cosign) | ✅ |
 | SECURITY.md | ✅ |
 | Kubernetes / selfhosted sibling | ⬜ post-v0.1 (separate repo) |
-| Merge to `main` / first tag `v0.1.0` | ⬜ when CI green on `develop` |
+| Merge to `main` / first tag `v0.1.0` | ✅ |
 
 [↑ Back to top](#readme-top)
 

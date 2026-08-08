@@ -114,7 +114,7 @@ Add “Release packaging” table B-040…B-045 (B-043 in progress).
 
 - [x] **Step 1: Write `ci.yml`**
 
-- [ ] **Step 2: Push to `develop` and confirm Actions green** (after user approves push)
+- [x] **Step 2: Push to `develop` and confirm Actions green** — CI run 31256704806 success
 
 - [x] **Step 3: Commit** — `635be73`
 
