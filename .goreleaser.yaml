@@ -1,0 +1,122 @@
+# GoReleaser config for gfireui-backend.
+# Requires Go 1.26.5+ (see go.mod). Binary ldflags match Makefile / Dockerfile.
+# Local multi-stage builds use Dockerfile (make docker-build).
+version: 2
+
+project_name: gfireui-backend
+
+before:
+  hooks:
+    - go mod tidy
+
+builds:
+  - id: gfireui-backend
+    main: ./cmd/gfireui-backend
+    binary: gfireui-backend
+    flags:
+      - -trimpath
+    env:
+      - CGO_ENABLED=0
+    goos:
+      - linux
+      - darwin
+      - windows
+    goarch:
+      - amd64
+      - arm64
+    ignore:
+      - goos: windows
+        goarch: arm64
+    ldflags:
+      - -s
+      - -w
+      - -X github.com/hrodrig/gfireui-backend/internal/version.Version={{.Version}}
+      - -X github.com/hrodrig/gfireui-backend/internal/version.Commit={{.ShortCommit}}
+      - -X github.com/hrodrig/gfireui-backend/internal/version.Branch={{.Branch}}
+      - -X github.com/hrodrig/gfireui-backend/internal/version.BuildDate={{.Date}}
+
+archives:
+  - id: gfireui-backend-dist
+    ids:
+      - gfireui-backend
+    formats: [tar.gz]
+    format_overrides:
+      - goos: windows
+        formats: [zip]
+    name_template: "gfireui-backend_{{ .Tag }}_{{ .Os }}_{{ .Arch }}"
+    files:
+      - src: LICENSE
+        dst: share/doc/gfireui-backend/LICENSE
+
+checksum:
+  name_template: checksums.txt
+
+# Cosign keyless signing (GitHub Actions OIDC). Requires `id-token: write`
+# in the release workflow and sigstore/cosign-installer.
+signs:
+  - cmd: cosign
+    env:
+      - COSIGN_EXPERIMENTAL=1
+    certificate: "${artifact}.pem"
+    args:
+      - sign-blob
+      - "--output-signature=${signature}"
+      - "--output-certificate=${certificate}"
+      - "${artifact}"
+      - --yes
+    artifacts: checksum
+
+changelog:
+  use: git
+  sort: asc
+  filters:
+    exclude:
+      - "^docs:"
+      - "^test:"
+      - "^chore:"
+      - "^ci:"
+      - "^\\.github:"
+
+snapshot:
+  version_template: "{{ incpatch .Version }}-next"
+
+# One SPDX + one CycloneDX document per release (source tree catalog).
+sboms:
+  - id: gfireui-backend-sbom-spdx
+    artifacts: source
+    documents:
+      - "gfireui-backend_{{ .Version }}_sbom.spdx.json"
+    args: ["$artifact", "--output", "spdx-json=$document"]
+  - id: gfireui-backend-sbom-cdx
+    artifacts: source
+    documents:
+      - "gfireui-backend_{{ .Version }}_sbom.cyclonedx.json"
+    args: ["$artifact", "--output", "cyclonedx-json=$document"]
+
+# Multi-arch images via pre-built binaries (Dockerfile.release).
+dockers_v2:
+  - dockerfile: Dockerfile.release
+    sbom: true
+    ids:
+      - gfireui-backend
+    images:
+      - ghcr.io/hrodrig/gfireui-backend
+    tags:
+      - "v{{ .Version }}"
+      - "{{ if not .IsSnapshot }}latest{{ end }}"
+    labels:
+      org.opencontainers.image.title: "gfireui-backend"
+      org.opencontainers.image.description: "BFF for GFireUI — auth, RBAC, audit, thin GFire proxy"
+      org.opencontainers.image.source: "https://github.com/hrodrig/gfireui-backend"
+      org.opencontainers.image.version: "{{ .Version }}"
+      org.opencontainers.image.revision: "{{ .FullCommit }}"
+      org.opencontainers.image.created: "{{ .Date }}"
+
+docker_signs:
+  - cmd: cosign
+    env:
+      - COSIGN_EXPERIMENTAL=1
+    args:
+      - sign
+      - "${artifact}@${digest}"
+      - --yes

@@ -59,11 +59,7 @@ Keep a Changelog header; `## [Unreleased]` with note that OCI/CI/release work la
 
 Add “Release packaging” table B-040…B-045 (B-043 in progress).
 
-- [ ] **Step 4: Commit** (message approved by user)
-
-```
-docs: add SECURITY.md and CHANGELOG for release band
-```
+- [x] **Step 4: Commit** (message approved by user) — `2bf2e8e`
 
 ---
 
@@ -78,27 +74,11 @@ docs: add SECURITY.md and CHANGELOG for release band
 - Consumes: `main: ./cmd/gfireui-backend`, binary `gfireui-backend`, ldflags into `github.com/hrodrig/gfireui-backend/internal/version`
 - Produces: GHCR image `ghcr.io/hrodrig/gfireui-backend` tags `v{{ .Version }}` + `latest`; multi-arch amd64+arm64
 
-- [ ] **Step 1: Author `.goreleaser.yaml` (version: 2)**
+- [x] **Step 1: Author `.goreleaser.yaml` (version: 2)**
 
-Mirror gfire structure:
+- [x] **Step 2: Validate config** — `goreleaser check` passed
 
-- `before.hooks`: `go mod tidy` (optional `go test` — prefer CI/release-check for Postgres cover; keep before-hook light or `go test` without DSN only)
-- `builds`: CGO_ENABLED=0; goos linux/darwin/windows; goarch amd64/arm64; ignore windows/arm64
-- `ldflags`: Version, Commit, Branch, BuildDate → `internal/version`
-- `archives` + `checksum` + `signs` (cosign sign-blob on checksum) + `changelog` filters
-- `sboms`: source SPDX + CycloneDX named `gfireui-backend_{{ .Version }}_sbom.*.json`
-- `dockers_v2`: `Dockerfile.release`, `sbom: true`, image `ghcr.io/hrodrig/gfireui-backend`, labels
-- `docker_signs`: cosign sign `${artifact}@${digest}`
-
-- [ ] **Step 2: Validate config**
-
-Run: `goreleaser check`  
-Expected: pass
-
-- [ ] **Step 3: Optional snapshot dry-run** (if Docker/QEMU available)
-
-Run: `make snapshot` or `goreleaser release --snapshot --clean` after `make release-check`  
-Expected: local dist artifacts; no GHCR push required
+- [ ] **Step 3: Optional snapshot dry-run** (if Docker/QEMU available) — defer to release-check window
 
 - [ ] **Step 4: Commit**
 
