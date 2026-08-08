@@ -98,11 +98,7 @@ Add “Release packaging” table B-040…B-045 (B-043 in progress).
 
 - [x] **Step 2: Run smoke locally** — OK
 
-- [ ] **Step 3: Commit**
-
-```
-chore: add docker-smoke healthz check
-```
+- [x] **Step 3: Commit** — `8c6cfd9`
 
 ---
 
@@ -116,20 +112,7 @@ chore: add docker-smoke healthz check
 - Consumes: `COVER_DSN` / `GFIREUI_BACKEND_TEST_DSN`, `COVER_MIN_PERCENT=80`
 - Produces: red CI blocks merge; cover never optional
 
-- [ ] **Step 1: Write `ci.yml`**
-
-Triggers: `push` + `pull_request` to `main`, `develop`  
-Concurrency: cancel-in-progress  
-Permissions: `contents: read`
-
-Jobs:
-
-1. **lint** — setup-go from `go.mod`; `gofmt -s -l .` fail if non-empty; `make lint` (or vet only if fmt already checked); install/run `make gocyclo`
-2. **test** — `go test -race ./... -count=1`
-3. **cover** — service `postgres:18` (or match compose image/creds: user/db/password `gfireui`, host port mapping to 5432 in-job); wait `pg_isready`; set `GFIREUI_BACKEND_TEST_DSN`; run cover profile + awk gate ≥80% (same logic as Makefile). Install `bc` only if Makefile uses it — current Makefile uses `awk` only.
-4. **docker** — `docker build` with VERSION/COMMIT build-args from git; no push
-
-**Hard rule:** do not mark cover `continue-on-error`. Do not skip cover on PRs.
+- [x] **Step 1: Write `ci.yml`**
 
 - [ ] **Step 2: Push to `develop` and confirm Actions green** (after user approves commit)
 
@@ -151,23 +134,7 @@ ci: add fmt vet gocyclo test cover and docker gates
 - Consumes: green tree + annotated tag `v*`
 - Produces: GitHub Release + GHCR multi-arch + SBOM + cosign
 
-- [ ] **Step 1: Write `release.yml`**
-
-Trigger: `push` tags `v*`  
-Permissions: `contents: write`, `packages: write`, `id-token: write`
-
-Steps (order mandatory):
-
-1. checkout fetch-depth 0  
-2. setup-go  
-3. install goreleaser (install-only)  
-4. install bc if needed  
-5. **QEMU + buildx** (multi-arch)  
-6. **`make release-check`** — **must fail the job before publish if cover/fmt/gocyclo/security fail**  
-   - Note: `release-check` needs Docker for postgres cover + docker-scan; ensure runner has Docker  
-7. login ghcr.io  
-8. cosign-installer + syft download  
-9. `goreleaser release --clean` with `GITHUB_TOKEN`
+- [x] **Step 1: Write `release.yml`** — `make release-check` before GoReleaser
 
 - [ ] **Step 2: Commit**
 

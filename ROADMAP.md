@@ -30,8 +30,8 @@ Plan: [docs/superpowers/plans/2026-08-08-gfireui-backend-oci-ci-release.md](./do
 | ID | Item | Status |
 | -- | ---- | ------ |
 | B-040 | GoReleaser multi-arch GHCR + SBOM + cosign | ✅ |
-| B-041 | CI fmt/vet/gocyclo/test/cover≥80%/docker | Pending |
-| B-042 | release.yml gates-then-GoReleaser | Pending |
+| B-041 | CI fmt/vet/gocyclo/test/cover≥80%/docker | ✅ |
+| B-042 | release.yml gates-then-GoReleaser | ✅ |
 | B-043 | SECURITY + CHANGELOG + docs sync | ✅ (docs band; README/SPEC sync later) |
 | B-044 | docker-smoke `/healthz` | ✅ |
 | B-045 | `main` + tag `v0.1.0` when CI green | Pending |
