@@ -138,6 +138,56 @@ func TestClientOpsHelpers(t *testing.T) {
 	}
 }
 
+func TestClientCountServersRecurringAndVersion(t *testing.T) {
+	t.Parallel()
+
+	upstream := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		switch r.URL.Path {
+		case "/api/v1/servers":
+			w.Header().Set("Content-Type", "application/json")
+			_, _ = w.Write([]byte(`{"servers":[{"id":"a"},{"id":"b"},{"id":"c"}]}`))
+		case "/api/v1/recurring":
+			w.Header().Set("Content-Type", "application/json")
+			_, _ = w.Write([]byte(`{"recurring":[{"id":"nightly"}]}`))
+		case "/api/healthz":
+			w.Header().Set("Content-Type", "application/json")
+			_, _ = w.Write([]byte(`{"status":"ok","version":"1.0.2","commit":"abc123"}`))
+		default:
+			w.WriteHeader(http.StatusNotFound)
+		}
+	}))
+	defer upstream.Close()
+
+	client, err := gfire.NewClient(upstream.URL+"/api", "service-token", upstream.Client())
+	if err != nil {
+		t.Fatalf("NewClient() error = %v", err)
+	}
+
+	servers, err := client.CountServers(context.Background())
+	if err != nil {
+		t.Fatalf("CountServers() error = %v", err)
+	}
+	if servers != 3 {
+		t.Fatalf("servers = %d, want 3", servers)
+	}
+
+	recurring, err := client.CountRecurring(context.Background())
+	if err != nil {
+		t.Fatalf("CountRecurring() error = %v", err)
+	}
+	if recurring != 1 {
+		t.Fatalf("recurring = %d, want 1", recurring)
+	}
+
+	ver, err := client.FetchVersion(context.Background())
+	if err != nil {
+		t.Fatalf("FetchVersion() error = %v", err)
+	}
+	if ver.Version != "1.0.2" || ver.Commit != "abc123" {
+		t.Fatalf("version = %#v", ver)
+	}
+}
+
 func TestClientAllowsEmptyToken(t *testing.T) {
 	t.Parallel()
 
