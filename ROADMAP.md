@@ -22,6 +22,22 @@
 
 **v0.1 done when:** compose brings API up, bootstrap Admin can login, proxy reaches a running GFire.
 
+## Release packaging (OCI / CI)
+
+Spec: [docs/superpowers/specs/2026-08-08-gfireui-backend-oci-ci-release-design.md](./docs/superpowers/specs/2026-08-08-gfireui-backend-oci-ci-release-design.md)  
+Plan: [docs/superpowers/plans/2026-08-08-gfireui-backend-oci-ci-release.md](./docs/superpowers/plans/2026-08-08-gfireui-backend-oci-ci-release.md)
+
+| ID | Item | Status |
+| -- | ---- | ------ |
+| B-040 | GoReleaser multi-arch GHCR + SBOM + cosign | Pending |
+| B-041 | CI fmt/vet/gocyclo/test/cover≥80%/docker | Pending |
+| B-042 | release.yml gates-then-GoReleaser | Pending |
+| B-043 | SECURITY + CHANGELOG + docs sync | In progress |
+| B-044 | docker-smoke `/healthz` | Pending |
+| B-045 | `main` + tag `v0.1.0` when CI green | Pending |
+
+**Release rule:** no tag / no GHCR publish if fmt, vet, gocyclo, test, or cover (&lt; 80%) is red.
+
 ## Post-v0.1
 
 | ID | Item | Notes |
